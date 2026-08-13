@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmação de Presença | Ponto Digital</title>
+  <style>
+    :root {
+      --primary: #0056b3;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --success: #28a745;
+      --error: #dc3545;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      background-color: var(--card-bg);
+      padding: 1.5rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+
+    header h1 {
+      color: var(--primary);
+      font-size: 1.5rem;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .card h2 {
+      margin-bottom: 0.5rem;
+      font-size: 1.4rem;
+    }
+
+    .card p {
+      color: #6c757d;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 1rem;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    button {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: #004085;
+    }
+
+    #status-msg {
+      margin-top: 1.2rem;
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-weight: 500;
+      display: none;
+    }
+
+    #status-msg.sucesso {
+      display: block;
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    #status-msg.erro {
+      display: block;
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Sistema de Confirmação de Presença</h1>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Passe a sua Tag</h2>
+      <p>Aproxime o crachá/tag do leitor ou digite o código abaixo.</p>
+
+      <form id="presence-form">
+        <input 
+          type="text" 
+          id="tag-input" 
+          placeholder="Código da Tag..." 
+          autofocus 
+          required 
+          autocomplete="off"
+        />
+        <button type="submit">Confirmar Presença</button>
+      </form>
+
+      <div id="status-msg"></div>
+    </div>
+  </main>
+
+  <footer>
+    &copy; Confirmação de Presença — Todos os direitos reservados.
+  </footer>
+
+  <script>
+    const form = document.getElementById('presence-form');
+    const input = document.getElementById('tag-input');
+    const statusMsg = document.getElementById('status-msg');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const tagValue = input.value.trim();
+
+      if (!tagValue) return;
+
+      // =========================================================
+      // ONDE CONECTAR SEU BANCO DE DADOS
+      // =========================================================
+      // Substitua a URL abaixo pelo endpoint/API do seu banco.
+      const API_URL = 'https://sua-api.com/confirmar-presenca';
+
+      try {
+        /*
+        // Exemplo de requisição para seu Banco de Dados:
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tag: tagValue, dataHora: new Date().toISOString() })
+        });
+
+        if (response.ok) {
+          exibirMensagem('Presença confirmada com sucesso!', 'sucesso');
+        } else {
+          exibirMensagem('Tag não encontrada ou erro no sistema.', 'erro');
+        }
+        */
+
+        // Simulação temporária até você conectar o banco:
+        exibirMensagem(`Presença registrada para a Tag: ${tagValue}`, 'sucesso');
+
+      } catch (err) {
+        exibirMensagem('Erro de conexão com o servidor.', 'erro');
+      }
+
+      input.value = '';
+      input.focus();
+    });
+
+    function exibirMensagem(texto, tipo) {
+      statusMsg.textContent = texto;
+      statusMsg.className = tipo;
+      setTimeout(() => {
+        statusMsg.style.display = 'none';
+      }, 4000);
+    }
+  </script>
+</body>
+</html>
