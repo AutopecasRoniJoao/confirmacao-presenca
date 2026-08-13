@@ -12,6 +12,7 @@
       --text: #212529;
       --success: #28a745;
       --error: #dc3545;
+      --border: #e9ecef;
     }
 
     * {
@@ -44,17 +45,18 @@
     main {
       flex: 1;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      padding: 2rem 1rem;
+      gap: 2rem;
     }
 
     .card {
       background-color: var(--card-bg);
-      padding: 2.5rem;
+      padding: 2rem;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      max-width: 420px;
+      max-width: 500px;
       width: 100%;
       text-align: center;
     }
@@ -122,6 +124,86 @@
       color: #721c24;
     }
 
+    /* Estilos da Lista de Presença */
+    .presence-container {
+      background-color: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .presence-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .presence-header h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .badge {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .presence-list {
+      list-style: none;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .presence-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+
+    .presence-item:last-child {
+      border-bottom: none;
+    }
+
+    .presence-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .presence-tag {
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .presence-time {
+      font-size: 0.8rem;
+      color: #6c757d;
+    }
+
+    .presence-status {
+      color: var(--success);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .empty-list {
+      text-align: center;
+      color: #6c757d;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+    }
+
     footer {
       text-align: center;
       padding: 1rem;
@@ -132,11 +214,12 @@
 </head>
 <body>
 
-  <header>
-  <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo da Empresa" style="max-height: 115px;">
-</header>
+  <header> 
+    <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo da Empresa" style="max-height: 115px;">
+  </header>
 
   <main>
+    <!-- Cartão de Leitura da Tag -->
     <div class="card">
       <h2>Passe a sua Tag</h2>
       <p>Aproxime o crachá/tag do leitor ou digite o código abaixo.</p>
@@ -155,6 +238,18 @@
 
       <div id="status-msg"></div>
     </div>
+
+    <!-- Lista de Funcionários Confirmados -->
+    <div class="presence-container">
+      <div class="presence-header">
+        <h3>Confirmados Recentemente</h3>
+        <span class="badge" id="counter">0</span>
+      </div>
+
+      <ul class="presence-list" id="presence-list">
+        <li class="empty-list" id="empty-msg">Nenhum registro até o momento.</li>
+      </ul>
+    </div>
   </main>
 
   <footer>
@@ -165,6 +260,11 @@
     const form = document.getElementById('presence-form');
     const input = document.getElementById('tag-input');
     const statusMsg = document.getElementById('status-msg');
+    const presenceList = document.getElementById('presence-list');
+    const emptyMsg = document.getElementById('empty-msg');
+    const counter = document.getElementById('counter');
+
+    let totalPresencas = 0;
 
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -175,12 +275,11 @@
       // =========================================================
       // ONDE CONECTAR SEU BANCO DE DADOS
       // =========================================================
-      // Substitua a URL abaixo pelo endpoint/API do seu banco.
       const API_URL = 'https://sua-api.com/confirmar-presenca';
 
       try {
         /*
-        // Exemplo de requisição para seu Banco de Dados:
+        // Exemplo de integração real com o banco de dados:
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -188,13 +287,19 @@
         });
 
         if (response.ok) {
-          exibirMensagem('Presença confirmada com sucesso!', 'sucesso');
+          const dados = await response.json();
+          // Adiciona à lista usando os dados retornados (ex: nome do funcionário se o banco retornar)
+          adicionarNaLista(dados.nome || tagValue);
+          exibirMensagem('Presença confirmada!', 'sucesso');
         } else {
-          exibirMensagem('Tag não encontrada ou erro no sistema.', 'erro');
+          exibirMensagem('Tag não encontrada.', 'erro');
         }
         */
 
-        // Simulação temporária até você conectar o banco:
+        // Simulação enquanto não conecta o banco:
+        const horarioAtual = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        adicionarNaLista(tagValue, horarioAtual);
         exibirMensagem(`Presença registrada para a Tag: ${tagValue}`, 'sucesso');
 
       } catch (err) {
@@ -204,6 +309,29 @@
       input.value = '';
       input.focus();
     });
+
+    function adicionarNaLista(identificador, horario) {
+      if (emptyMsg) {
+        emptyMsg.style.display = 'none';
+      }
+
+      const li = document.createElement('li');
+      li.className = 'presence-item';
+      li.innerHTML = `
+        <div class="presence-info">
+          <span class="presence-tag">Tag: ${identificador}</span>
+          <span class="presence-time">Confirmado às ${horario}</span>
+        </div>
+        <span class="presence-status">✓ Presente</span>
+      `;
+
+      // Insere o mais recente no topo da lista
+      presenceList.insertBefore(li, presenceList.firstChild);
+
+      // Atualiza o contador
+      totalPresencas++;
+      counter.textContent = totalPresencas;
+    }
 
     function exibirMensagem(texto, tipo) {
       statusMsg.textContent = texto;
