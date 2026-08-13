@@ -13,7 +13,7 @@
       --success: #28a745;
       --error: #dc3545;
       --border: #e9ecef;
-      --warning: #ffc107;
+      --sidebar-bg: #1e293b;
     }
 
     * {
@@ -29,25 +29,40 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
+    /* Header */
     header {
       background-color: var(--card-bg);
-      padding: 1.5rem 2rem;
+      padding: 1rem 2rem;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       position: relative;
     }
 
-    header h1 {
+    .menu-btn {
+      background: none;
+      border: none;
+      font-size: 1.8rem;
+      cursor: pointer;
       color: var(--primary);
-      font-size: 1.5rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      line-height: 1;
+    }
+
+    .menu-btn:hover {
+      background-color: var(--border);
+    }
+
+    header img {
+      max-height: 90px;
     }
 
     .fullscreen-btn {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
       background-color: transparent;
       color: var(--primary);
       border: 2px solid var(--primary);
@@ -56,7 +71,6 @@
       font-weight: 600;
       border-radius: 6px;
       cursor: pointer;
-      width: auto;
       transition: all 0.2s;
     }
 
@@ -65,6 +79,151 @@
       color: white;
     }
 
+    /* Menu Lateral (Sidebar) */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -320px;
+      width: 320px;
+      height: 100%;
+      background-color: var(--sidebar-bg);
+      color: white;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.2);
+      transition: left 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+    }
+
+    .sidebar.open {
+      left: 0;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 1rem;
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.2rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: white;
+    }
+
+    .btn-create-event {
+      background-color: var(--success);
+      color: white;
+      border: none;
+      padding: 0.7rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      width: 100%;
+    }
+
+    .btn-create-event:hover {
+      background-color: #218838;
+    }
+
+    .events-list-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin-bottom: 0.8rem;
+    }
+
+    .events-list {
+      list-style: none;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .event-item {
+      background-color: #334155;
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .event-item.active {
+      border-color: #38bdf8;
+      background-color: #1e293b;
+    }
+
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .event-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .event-date {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    .event-actions {
+      display: flex;
+      gap: 0.3rem;
+    }
+
+    .event-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0.2rem;
+      border-radius: 4px;
+    }
+
+    .event-btn:hover {
+      background-color: rgba(255,255,255,0.1);
+    }
+
+    /* Overlay para fechar o menu ao clicar fora */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 999;
+    }
+
+    .overlay.open {
+      display: block;
+    }
+
+    /* Conteúdo Principal */
     main {
       flex: 1;
       display: flex;
@@ -72,6 +231,19 @@
       align-items: center;
       padding: 2rem 1rem;
       gap: 2rem;
+    }
+
+    /* Banner do Evento Ativo no Cartão */
+    .event-banner {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+      border: 1px solid #bae6fd;
     }
 
     .card {
@@ -147,7 +319,7 @@
       color: #721c24;
     }
 
-    /* Estilos da Lista de Presença */
+    /* Lista de Presença */
     .presence-container {
       background-color: var(--card-bg);
       padding: 1.5rem;
@@ -230,7 +402,7 @@
       font-weight: 600;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.2s, color 0.2s;
+      transition: background-color 0.2s;
     }
 
     .btn-edit {
@@ -268,14 +440,32 @@
 </head>
 <body>
 
+  <!-- Menu Lateral (Sidebar) -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h2>Gerenciador de Eventos</h2>
+      <button class="close-btn" id="close-sidebar">&times;</button>
+    </div>
+    <button class="btn-create-event" id="btn-new-event">+ Criar Novo Evento</button>
+    <div class="events-list-title">Meus Eventos</div>
+    <ul class="events-list" id="events-list"></ul>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
   <header> 
-    <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo da Empresa" style="max-height: 115px;">
+    <button class="menu-btn" id="open-sidebar" title="Abrir Menu de Eventos">☰</button>
+    <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo da Empresa">
     <button class="fullscreen-btn" onclick="toggleFullScreen()">⛶ Tela Cheia</button>
   </header>
 
   <main>
-    <!-- Cartão de Leitura da Tag -->
     <div class="card">
+      <!-- Exibe o Evento Ativo -->
+      <div id="active-event-container" style="display: none;">
+        <div class="event-banner" id="event-banner-text">Evento: Palestra 1</div>
+      </div>
+
       <h2>Passe a sua Tag</h2>
       <p>Aproxime o crachá/tag do leitor ou digite o código abaixo.</p>
 
@@ -283,7 +473,7 @@
         <input 
           type="text" 
           id="tag-input" 
-          placeholder="Código da Tag..." 
+          placeholder="Código ou Nome do Funcionário..." 
           autofocus 
           required 
           autocomplete="off"
@@ -294,7 +484,6 @@
       <div id="status-msg"></div>
     </div>
 
-    <!-- Lista de Funcionários Confirmados -->
     <div class="presence-container">
       <div class="presence-header">
         <h3>Confirmados Recentemente</h3>
@@ -312,6 +501,16 @@
   </footer>
 
   <script>
+    // Referências DOM
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const openSidebarBtn = document.getElementById('open-sidebar');
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+    const btnNewEvent = document.getElementById('btn-new-event');
+    const eventsListEl = document.getElementById('events-list');
+    const activeEventContainer = document.getElementById('active-event-container');
+    const eventBannerText = document.getElementById('event-banner-text');
+
     const form = document.getElementById('presence-form');
     const input = document.getElementById('tag-input');
     const statusMsg = document.getElementById('status-msg');
@@ -319,9 +518,45 @@
     const emptyMsg = document.getElementById('empty-msg');
     const counter = document.getElementById('counter');
 
-    let totalPresencas = 0;
+    // Chaves de armazenamento
+    const STORAGE_EVENTS_KEY = 'eventos_presenca_roni';
+    const STORAGE_ACTIVE_EVENT_KEY = 'evento_ativo_roni';
 
-    // Função para obter Data e Hora no fuso de Brasília (UTC-03:00)
+    // Estado da aplicação
+    let eventos = JSON.parse(localStorage.getItem(STORAGE_EVENTS_KEY)) || [];
+    let eventoAtivoId = localStorage.getItem(STORAGE_ACTIVE_EVENT_KEY) || null;
+
+    // Inicialização
+    init();
+
+    function init() {
+      // Se não houver eventos cadastrados, cria um padrão
+      if (eventos.length === 0) {
+        const eventoPadrao = {
+          id: 'evt_' + Date.now(),
+          nome: 'Evento Geral',
+          data: getFormattedDateOnly(),
+          registros: []
+        };
+        eventos.push(eventoPadrao);
+        eventoAtivoId = eventoPadrao.id;
+        salvarEventos();
+      } else if (!eventoAtivoId || !eventos.find(e => e.id === eventoAtivoId)) {
+        eventoAtivoId = eventos[0].id;
+        localStorage.setItem(STORAGE_ACTIVE_EVENT_KEY, eventoAtivoId);
+      }
+
+      renderizarEventos();
+      renderizarPresencas();
+    }
+
+    // Função para obter apenas Dia, Mês e Ano (DD/MM/AAAA)
+    function getFormattedDateOnly() {
+      const agora = new Date();
+      return agora.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    // Função para obter Data e Hora em Brasília
     function getBrasiliaDateTime() {
       const agora = new Date();
       const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -333,81 +568,202 @@
       return `${dataFormatted} às ${horaFormatted}`;
     }
 
-    form.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const tagValue = input.value.trim();
+    // Controle da Sidebar (Menu)
+    openSidebarBtn.addEventListener('click', () => {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+    });
 
-      if (!tagValue) return;
+    function fecharMenu() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    }
 
-      // =========================================================
-      // ONDE CONECTAR SEU BANCO DE DADOS
-      // =========================================================
-      const API_URL = 'https://sua-api.com/confirmar-presenca';
+    closeSidebarBtn.addEventListener('click', fecharMenu);
+    overlay.addEventListener('click', fecharMenu);
 
-      try {
-        const dataHoraBrasilia = getBrasiliaDateTime();
-        
-        adicionarNaLista(tagValue, dataHoraBrasilia);
-        exibirMensagem(`Presença registrada para a Tag: ${tagValue}`, 'sucesso');
+    // Criar Novo Evento
+    btnNewEvent.addEventListener('click', () => {
+      const nomeEvento = prompt('Digite o nome do novo evento (ex: Palestra 2):');
+      if (!nomeEvento || nomeEvento.trim() === '') return;
 
-      } catch (err) {
-        exibirMensagem('Erro de conexão com o servidor.', 'erro');
+      const dataEvento = prompt('Digite a data do evento (ou confirme a data de hoje):', getFormattedDateOnly());
+      if (!dataEvento || dataEvento.trim() === '') return;
+
+      const novoEvt = {
+        id: 'evt_' + Date.now(),
+        nome: nomeEvento.trim(),
+        data: dataEvento.trim(),
+        registros: []
+      };
+
+      eventos.unshift(novoEvt);
+      eventoAtivoId = novoEvt.id;
+
+      salvarEventos();
+      renderizarEventos();
+      renderizarPresencas();
+      fecharMenu();
+      exibirMensagem(`Evento "${novoEvt.nome}" criado com sucesso!`, 'sucesso');
+    });
+
+    function salvarEventos() {
+      localStorage.setItem(STORAGE_EVENTS_KEY, JSON.stringify(eventos));
+      localStorage.setItem(STORAGE_ACTIVE_EVENT_KEY, eventoAtivoId);
+    }
+
+    // Renderiza a lista de eventos no menu lateral
+    function renderizarEventos() {
+      eventsListEl.innerHTML = '';
+
+      eventos.forEach(evt => {
+        const li = document.createElement('li');
+        li.className = `event-item ${evt.id === eventoAtivoId ? 'active' : ''}`;
+
+        li.innerHTML = `
+          <div class="event-info">
+            <span class="event-name">${evt.nome}</span>
+            <span class="event-date">📅 ${evt.data}</span>
+          </div>
+          <div class="event-actions">
+            <button class="event-btn btn-edit-evt" title="Editar Evento">✏️</button>
+            <button class="event-btn btn-del-evt" title="Excluir Evento">🗑️</button>
+          </div>
+        `;
+
+        // Selecionar Evento
+        li.addEventListener('click', (e) => {
+          if (e.target.classList.contains('event-btn')) return;
+          eventoAtivoId = evt.id;
+          salvarEventos();
+          renderizarEventos();
+          renderizarPresencas();
+          fecharMenu();
+        });
+
+        // Editar Evento (Nome e Data)
+        li.querySelector('.btn-edit-evt').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const novoNome = prompt('Editar nome do evento:', evt.nome);
+          if (novoNome !== null && novoNome.trim() !== '') {
+            const novaData = prompt('Editar data do evento (DD/MM/AAAA):', evt.data);
+            if (novaData !== null && novaData.trim() !== '') {
+              evt.nome = novoNome.trim();
+              evt.data = novaData.trim();
+              salvarEventos();
+              renderizarEventos();
+              renderizarPresencas();
+            }
+          }
+        });
+
+        // Excluir Evento
+        li.querySelector('.btn-del-evt').addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (eventos.length <= 1) {
+            alert('Você precisa ter pelo menos um evento ativo.');
+            return;
+          }
+
+          if (confirm(`Deseja excluir o evento "${evt.nome}" e todos os registros dele?`)) {
+            eventos = eventos.filter(e => e.id !== evt.id);
+            if (eventoAtivoId === evt.id) {
+              eventoAtivoId = eventos[0].id;
+            }
+            salvarEventos();
+            renderizarEventos();
+            renderizarPresencas();
+          }
+        });
+
+        eventsListEl.appendChild(li);
+      });
+
+      // Atualiza o banner do evento ativo
+      const eventoAtual = eventos.find(e => e.id === eventoAtivoId);
+      if (eventoAtual) {
+        activeEventContainer.style.display = 'block';
+        eventBannerText.textContent = `Evento: ${eventoAtual.nome} (${eventoAtual.data})`;
       }
+    }
+
+    // Adicionar Presença no Evento Ativo
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const nomeFuncionario = input.value.trim();
+
+      if (!nomeFuncionario) return;
+
+      const eventoAtual = eventos.find(e => e.id === eventoAtivoId);
+      if (!eventoAtual) return;
+
+      const novoRegistro = {
+        id: Date.now(),
+        nome: nomeFuncionario,
+        dataHora: getBrasiliaDateTime()
+      };
+
+      eventoAtual.registros.unshift(novoRegistro);
+
+      salvarEventos();
+      renderizarPresencas();
+      exibirMensagem(`Presença registrada para: ${nomeFuncionario}`, 'sucesso');
 
       input.value = '';
       input.focus();
     });
 
-    function adicionarNaLista(identificador, dataHora) {
-      if (emptyMsg) {
-        emptyMsg.style.display = 'none';
+    // Renderiza a lista de presença do evento ativo
+    function renderizarPresencas() {
+      presenceList.innerHTML = '';
+      const eventoAtual = eventos.find(e => e.id === eventoAtivoId);
+
+      if (!eventoAtual || eventoAtual.registros.length === 0) {
+        presenceList.appendChild(emptyMsg);
+        emptyMsg.style.display = 'block';
+        counter.textContent = '0';
+        return;
       }
 
-      const li = document.createElement('li');
-      li.className = 'presence-item';
-      
-      li.innerHTML = `
-        <div class="presence-info">
-          <span class="presence-tag"> ${identificador}</span>
-          <span class="presence-time">${dataHora} (UTC-03:00)</span>
-        </div>
-        <div class="action-buttons">
-          <button class="btn-action btn-edit" title="Editar Nome/Tag">✏️ Editar</button>
-          <button class="btn-action btn-delete" title="Excluir Registro">🗑️ Excluir</button>
-        </div>
-      `;
+      emptyMsg.style.display = 'none';
+      counter.textContent = eventoAtual.registros.length;
 
-      // Evento de Editar (à esquerda do botão de excluir)
-      const btnEdit = li.querySelector('.btn-edit');
-      btnEdit.addEventListener('click', function() {
-        const tagSpan = li.querySelector('.presence-tag');
-        const nomeAtual = tagSpan.textContent.replace('Tag: ', '');
-        const novoNome = prompt('Editar identificação da tag/funcionário:', nomeAtual);
-        
-        if (novoNome !== null && novoNome.trim() !== '') {
-          tagSpan.textContent = `Tag: ${novoNome.trim()}`;
-        }
-      });
+      eventoAtual.registros.forEach((item) => {
+        const li = document.createElement('li');
+        li.className = 'presence-item';
 
-      // Evento de Excluir
-      const btnDelete = li.querySelector('.btn-delete');
-      btnDelete.addEventListener('click', function() {
-        if (confirm('Deseja realmente remover este registro?')) {
-          li.remove();
-          totalPresencas--;
-          counter.textContent = totalPresencas;
+        li.innerHTML = `
+          <div class="presence-info">
+            <span class="presence-tag">${item.nome}</span>
+            <span class="presence-time">${item.dataHora} (UTC-03:00)</span>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-action btn-edit" title="Editar Nome">✏️ Editar</button>
+            <button class="btn-action btn-delete" title="Excluir Registro">🗑️ Excluir</button>
+          </div>
+        `;
 
-          if (totalPresencas === 0 && emptyMsg) {
-            emptyMsg.style.display = 'block';
+        // Botão Editar Funcionário
+        li.querySelector('.btn-edit').addEventListener('click', function() {
+          const novoNome = prompt('Editar nome do funcionário:', item.nome);
+          if (novoNome !== null && novoNome.trim() !== '') {
+            item.nome = novoNome.trim();
+            salvarEventos();
+            renderizarPresencas();
           }
-        }
+        });
+
+        // Botão Excluir Funcionário
+        li.querySelector('.btn-delete').addEventListener('click', function() {
+          if (confirm('Deseja remover este registro de presença?')) {
+            eventoAtual.registros = eventoAtual.registros.filter(r => r.id !== item.id);
+            salvarEventos();
+            renderizarPresencas();
+          }
+        });
+
+        presenceList.appendChild(li);
       });
-
-      // Insere o registro mais recente no topo
-      presenceList.insertBefore(li, presenceList.firstChild);
-
-      totalPresencas++;
-      counter.textContent = totalPresencas;
     }
 
     function exibirMensagem(texto, tipo) {
@@ -418,7 +774,6 @@
       }, 4000);
     }
 
-    // Função para Alternar Tela Cheia
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
