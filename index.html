@@ -236,7 +236,7 @@
       text-align: center;
     }
 
-    input[type="text"], input[type="password"], input[type="time"] {
+    input[type="text"], input[type="password"] {
       width: 100%;
       padding: 0.8rem 1rem;
       font-size: 1rem;
@@ -264,12 +264,13 @@
       margin-top: 1.2rem;
       padding: 0.8rem;
       border-radius: 6px;
-      font-weight: 500;
+      font-weight: 600;
       display: none;
     }
 
     #status-msg.sucesso { display: block; background-color: #d4edda; color: #155724; }
     #status-msg.erro { display: block; background-color: #f8d7da; color: #721c24; }
+    #status-msg.alerta { display: block; background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
     /* Presence List */
     .presence-container {
@@ -405,7 +406,6 @@
       cursor: pointer;
     }
 
-    .btn-edit-sm { background-color: #e2e3e5; color: #333; }
     .btn-del-sm { background-color: #f8d7da; color: #721c24; }
 
     footer {
@@ -450,14 +450,14 @@
         <div class="event-banner" id="event-banner-text">Evento: --</div>
       </div>
 
-      <h2>Passe a sua Tag</h2>
-      <p>Aproxime o crachá/tag do leitor ou digite o código abaixo.</p>
+      <h2>Aproxime a sua Tag</h2>
+      <p>O leitor registrará automaticamente sem a necessidade de clicar na tela.</p>
 
       <form id="presence-form">
         <input 
           type="text" 
           id="tag-input" 
-          placeholder="Código da Tag..." 
+          placeholder="Aproxime o leitor aqui..." 
           autofocus 
           required 
           autocomplete="off"
@@ -576,6 +576,7 @@
     const presenceList = document.getElementById('presence-list');
     const counter = document.getElementById('counter');
     const statusMsg = document.getElementById('status-msg');
+    const tagInput = document.getElementById('tag-input');
 
     // Inicialização
     init();
@@ -598,6 +599,17 @@
 
       renderizarEventos();
       renderizarPresencas();
+      manterFocoNoInput();
+    }
+
+    // Garante que o input da tag esteja sempre focado para o leitor responder na hora
+    function manterFocoNoInput() {
+      tagInput.focus();
+      document.addEventListener('click', (e) => {
+        // Se clicar dentro do modal ou de formulários administrativos, permite digitação normal
+        if (e.target.closest('.modal') || e.target.closest('.sidebar')) return;
+        tagInput.focus();
+      });
     }
 
     function salvarTudo() {
@@ -619,7 +631,11 @@
     document.getElementById('close-sidebar').onclick = fecharMenu;
     overlay.onclick = fecharMenu;
 
-    function fecharMenu() { sidebar.classList.remove('open'); overlay.classList.remove('open'); }
+    function fecharMenu() { 
+      sidebar.classList.remove('open'); 
+      overlay.classList.remove('open'); 
+      setTimeout(() => tagInput.focus(), 100);
+    }
 
     // Eventos
     document.getElementById('btn-new-event').onclick = () => {
@@ -710,15 +726,23 @@
       }
     }
 
-    // Registrar Presença
+    // Registrar Presença (Com Trava de Duplicidade)
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
-      const input = document.getElementById('tag-input');
-      const tag = input.value.trim();
+      const tag = tagInput.value.trim();
       if (!tag) return;
 
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
+
+      // 1. VERIFICAÇÃO DE DUPLICIDADE
+      const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
+      if (jaRegistrado) {
+        exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada neste evento!`, 'alerta');
+        tagInput.value = '';
+        tagInput.focus();
+        return;
+      }
 
       // Busca Funcionário
       const func = funcionarios.find(f => f.tag.toLowerCase() === tag.toLowerCase());
@@ -745,8 +769,9 @@
       salvarTudo();
       renderizarPresencas();
 
-      exibirMensagem(`Presença gravada: ${nomeExibicao} ${atrasado ? '(Atrasado)' : ''}`, atrasado ? 'erro' : 'sucesso');
-      input.value = '';
+      exibirMensagem(`✓ Presença confirmada: ${nomeExibicao} ${atrasado ? '(Atrasado)' : ''}`, atrasado ? 'erro' : 'sucesso');
+      tagInput.value = '';
+      tagInput.focus();
     };
 
     function renderizarPresencas() {
@@ -787,6 +812,7 @@
       evtAtual.registros = evtAtual.registros.filter(r => r.id !== regId);
       salvarTudo();
       renderizarPresencas();
+      tagInput.focus();
     }
 
     // Modal Admin Controls
@@ -813,7 +839,10 @@
       }
     };
 
-    function fecharModal(id) { document.getElementById(id).classList.remove('open'); }
+    function fecharModal(id) { 
+      document.getElementById(id).classList.remove('open'); 
+      setTimeout(() => tagInput.focus(), 100);
+    }
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
