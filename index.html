@@ -806,13 +806,16 @@
     }
 
     function removerRegistro(regId) {
-      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
-      if (!evtAtual) return;
-      evtAtual.registros = evtAtual.registros.filter(r => r.id !== regId);
-      salvarTudo();
-      renderizarPresencas();
-      tagInput.focus();
-    }
+  const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+  if (!evtAtual) return;
+  
+  // Garantimos que a comparação funcione tanto para números quanto para textos
+  evtAtual.registros = evtAtual.registros.filter(r => String(r.id) !== String(regId));
+  
+  salvarTudo();
+  renderizarPresencas();
+  tagInput.focus();
+}
 
     // Modal Admin Controls
     document.getElementById('btn-open-admin').onclick = abrirLogin;
