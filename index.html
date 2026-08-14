@@ -9,6 +9,10 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0056b3">
 
+  <!-- 📚 Bibliotecas jsPDF para Geração de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     :root {
       --primary: #0056b3;
@@ -208,7 +212,32 @@
       margin-bottom: 1rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid var(--border);
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
+
+    .presence-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-pdf {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background-color 0.2s;
+    }
+
+    .btn-pdf:hover { background-color: #c82333; }
 
     .badge {
       background-color: var(--primary);
@@ -322,7 +351,10 @@
     <div class="presence-container">
       <div class="presence-header">
         <h3>Confirmados Recentemente</h3>
-        <span class="badge" id="counter">0</span>
+        <div class="presence-actions">
+          <button class="btn-pdf" onclick="exportarEventoPDF()">📄 Exportar PDF</button>
+          <span class="badge" id="counter">0</span>
+        </div>
       </div>
 
       <ul class="presence-list" id="presence-list">
@@ -337,7 +369,7 @@
     let eventos = [];
     let funcionarios = [];
     let eventoAtivoId = null;
-    let editandoNomeManual = false; // Controle de foco do leitor
+    let editandoNomeManual = false;
 
     const presenceList = document.getElementById('presence-list');
     const counter = document.getElementById('counter');
@@ -426,12 +458,9 @@
       localStorage.setItem('evento_ativo_roni', eventoAtivoId);
     }
 
-    // 🎯 Gerenciador do Auto-Foco do Leitor RFID
     function configurarAutoFoco() {
       tagInput.focus();
-      
       document.addEventListener('click', (e) => {
-        // Se clicar fora da caixa manual, devolve o foco para o leitor RFID
         if (!manualInput.contains(e.target) && e.target.id !== 'manual-search-name') {
           modoBuscaManual(false);
         }
@@ -471,7 +500,6 @@
       }
     }
 
-    // 📡 Registro por Leitor RFID
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
       carregarDados();
@@ -483,7 +511,6 @@
       modoBuscaManual(false);
     };
 
-    // ✍️ Registro Manual por Seleção do Nome
     function confirmarPresencaManual(e) {
       e.preventDefault();
       carregarDados();
@@ -501,10 +528,9 @@
       processarPresenca(func.tag, func);
       manualInput.value = '';
       document.getElementById('info-tag').textContent = '';
-      modoBuscaManual(false); // Retorna o foco pro leitor RFID
+      modoBuscaManual(false);
     }
 
-    // ⚙️ Função centralizada de presença
     function processarPresenca(tag, funcObj) {
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
@@ -578,6 +604,78 @@
         `;
         presenceList.appendChild(li);
       });
+    }
+
+    // 📄 GERADOR DE PDF DO EVENTO ATIVO
+    function exportarEventoPDF() {
+      carregarDados();
+      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+
+      if (!evtAtual || evtAtual.registros.length === 0) {
+        alert('Não há registros de presença para exportar neste evento.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Cabeçalho do PDF
+      doc.setFillColor(0, 86, 179); // Cor azul da marca Roni
+      doc.rect(0, 0, 210, 28, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('Relatório de Presença — Roni', 14, 18);
+
+      // Informações do Evento
+      doc.setTextColor(33, 37, 41);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Evento: ${evtAtual.nome}`, 14, 38);
+      doc.text(`Data: ${evtAtual.data} | Horário Previsto: ${evtAtual.horaInicio || '00:00'}`, 14, 45);
+
+      const totalConfirmados = evtAtual.registros.length;
+      const totalAtrasados = evtAtual.registros.filter(r => r.atrasado).length;
+
+      doc.text(`Total de Presenças: ${totalConfirmados} | Atrasos: ${totalAtrasados}`, 14, 52);
+
+      // Dados para a tabela (ordenados por horário de chegada)
+      const tableRows = [];
+      const registrosOrdenados = [...evtAtual.registros].reverse();
+
+      registrosOrdenados.forEach((reg, idx) => {
+        tableRows.push([
+          idx + 1,
+          reg.nome,
+          reg.setor || 'Geral',
+          reg.tag,
+          reg.hora,
+          reg.atrasado ? 'Atrasado' : 'No Tempo'
+        ]);
+      });
+
+      // Gerar Tabela
+      doc.autoTable({
+        startY: 58,
+        head: [['#', 'Nome', 'Setor', 'Tag RFID', 'Horário', 'Status']],
+        body: tableRows,
+        headStyles: { fillColor: [0, 86, 179], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [244, 246, 249] },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { cellWidth: 60 },
+          2: { cellWidth: 35 },
+          3: { cellWidth: 30 },
+          4: { cellWidth: 25 },
+          5: { cellWidth: 25 }
+        },
+        styles: { fontSize: 9 }
+      });
+
+      // Salvar o arquivo PDF
+      const nomeArquivo = `Relatorio_Presenca_${evtAtual.nome.replace(/\s+/g, '_')}_${evtAtual.data.replace(/\//g, '-')}.pdf`;
+      doc.save(nomeArquivo);
     }
 
     function exibirMensagem(txt, tipo) {
