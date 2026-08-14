@@ -275,7 +275,7 @@
       </div>
 
       <h2 style="margin-top: 0.8rem;">Aproxime a sua Tag</h2>
-      <p>O leitor registrará automaticamente ao aproximar o cartão/chaveiro.</p>
+      <p>O leitor registrará automaticamente sem a necessidade de clicar na tela.</p>
 
       <!-- 📡 Entrada por Leitor RFID -->
       <form id="presence-form">
@@ -300,9 +300,10 @@
             type="text" 
             id="manual-search-name" 
             list="list-funcionarios" 
-            placeholder="Digite para buscar o nome..." 
+            placeholder="Clique aqui para buscar o nome..." 
             autocomplete="off"
             oninput="detectarTagAtribuida()"
+            onfocus="modoBuscaManual(true)"
             style="margin-bottom: 0.4rem; text-align: left;"
           />
           <datalist id="list-funcionarios"></datalist>
@@ -336,11 +337,13 @@
     let eventos = [];
     let funcionarios = [];
     let eventoAtivoId = null;
+    let editandoNomeManual = false; // Controle de foco do leitor
 
     const presenceList = document.getElementById('presence-list');
     const counter = document.getElementById('counter');
     const statusMsg = document.getElementById('status-msg');
     const tagInput = document.getElementById('tag-input');
+    const manualInput = document.getElementById('manual-search-name');
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -381,6 +384,7 @@
       carregarDados();
       renderizarPresencas();
       atualizarDatalistFuncionarios();
+      configurarAutoFoco();
 
       window.addEventListener('storage', () => {
         carregarDados();
@@ -422,6 +426,25 @@
       localStorage.setItem('evento_ativo_roni', eventoAtivoId);
     }
 
+    // 🎯 Gerenciador do Auto-Foco do Leitor RFID
+    function configurarAutoFoco() {
+      tagInput.focus();
+      
+      document.addEventListener('click', (e) => {
+        // Se clicar fora da caixa manual, devolve o foco para o leitor RFID
+        if (!manualInput.contains(e.target) && e.target.id !== 'manual-search-name') {
+          modoBuscaManual(false);
+        }
+      });
+    }
+
+    function modoBuscaManual(ativo) {
+      editandoNomeManual = ativo;
+      if (!ativo) {
+        tagInput.focus();
+      }
+    }
+
     function getBrasiliaTimeOnly() {
       return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
     }
@@ -436,9 +459,8 @@
       });
     }
 
-    // 🔍 Exibe feedback visual da tag atribuída ao digitar o nome
     function detectarTagAtribuida() {
-      const val = document.getElementById('manual-search-name').value.trim();
+      const val = manualInput.value.trim();
       const infoBox = document.getElementById('info-tag');
       const func = funcionarios.find(f => f.nome.toLowerCase() === val.toLowerCase());
 
@@ -449,7 +471,7 @@
       }
     }
 
-    // 🎯 Registrar por Leitor RFID
+    // 📡 Registro por Leitor RFID
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
       carregarDados();
@@ -458,13 +480,14 @@
 
       processarPresenca(tag, null);
       tagInput.value = '';
+      modoBuscaManual(false);
     };
 
-    // ✍️ Registrar por Seleção de Nome
+    // ✍️ Registro Manual por Seleção do Nome
     function confirmarPresencaManual(e) {
       e.preventDefault();
       carregarDados();
-      const inputVal = document.getElementById('manual-search-name').value.trim();
+      const inputVal = manualInput.value.trim();
       if (!inputVal) return;
 
       const func = funcionarios.find(f => f.nome.toLowerCase() === inputVal.toLowerCase());
@@ -476,11 +499,12 @@
       }
 
       processarPresenca(func.tag, func);
-      document.getElementById('manual-search-name').value = '';
+      manualInput.value = '';
       document.getElementById('info-tag').textContent = '';
+      modoBuscaManual(false); // Retorna o foco pro leitor RFID
     }
 
-    // ⚙️ Função centralizada de registro de presença
+    // ⚙️ Função centralizada de presença
     function processarPresenca(tag, funcObj) {
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
