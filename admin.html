@@ -1,1 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Administrativo | Roni</title>
+  <style>
+    :root {
+      --primary: #0056b3;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --success: #28a745;
+      --error: #dc3545;
+      --border: #e9ecef;
+      --sidebar-bg: #1e293b;
+    }
 
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    header {
+      background-color: var(--card-bg);
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header img { max-height: 60px; }
+
+    .login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      padding: 1rem;
+    }
+
+    .card-login {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      font-size: 1rem;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    input:focus { border-color: var(--primary); }
+
+    .btn-primary {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .admin-layout {
+      display: none;
+      flex: 1;
+      max-width: 1200px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      gap: 2rem;
+    }
+
+    .admin-layout.active { display: flex; flex-direction: column; }
+
+    .admin-tabs {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .tab-content { display: none; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .tab-content.active { display: block; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid var(--border); padding: 0.8rem; text-align: left; font-size: 0.95rem; }
+    th { background-color: #f1f5f9; }
+
+    .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; }
+    .btn-del-sm { background-color: #f8d7da; color: #721c24; }
+
+    .event-selector-box {
+      background-color: #e0f2fe;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
+    <h2>Painel Administrativo</h2>
+  </header>
+
+  <!-- Login Area -->
+  <div class="login-container" id="login-screen">
+    <div class="card-login">
+      <h2 style="margin-bottom: 1.5rem;">Acesso Restrito</h2>
+      <form id="login-form">
+        <input type="text" id="admin-user" placeholder="Usuário" required />
+        <input type="password" id="admin-pass" placeholder="Senha" required />
+        <button type="submit" class="btn-primary">Entrar no Painel</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Admin Dashboard -->
+  <div class="admin-layout" id="admin-dashboard">
+    <div class="admin-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-eventos')">📅 Eventos & Presenças</button>
+      <button class="tab-btn" onclick="switchTab('tab-cadastros')">👥 Funcionários / Tags</button>
+      <button class="tab-btn" onclick="switchTab('tab-relatorios')">📊 Relatórios</button>
+      <button class="tab-btn" onclick="switchTab('tab-backup')">💾 Backup & Importação</button>
+    </div>
+
+    <!-- Tab Eventos -->
+    <div class="tab-content active" id="tab-eventos">
+      <div class="event-selector-box">
+        <div>
+          <strong>Evento Ativo: </strong>
+          <select id="select-evento-ativo" onchange="mudarEventoAtivo(this.value)" style="padding: 0.4rem; font-size: 0.95rem;"></select>
+        </div>
+        <button class="btn-sm" onclick="criarNovoEvento()" style="background: var(--success); color: white;">+ Criar Novo Evento</button>
+      </div>
+
+      <h3>Presenças do Evento Selecionado</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tag / RFID</th>
+            <th>Setor</th>
+            <th>Horário</th>
+            <th>Status</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="presencas-table"></tbody>
+      </table>
+    </div>
+
+    <!-- Tab Cadastros -->
+    <div class="tab-content" id="tab-cadastros">
+      <h3>Cadastrar / Editar Funcionário</h3>
+      <form id="employee-form" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 1rem 0 2rem 0;">
+        <input type="text" id="emp-tag" placeholder="Tag / Código (RFID)" style="flex:1;" required />
+        <input type="text" id="emp-name" placeholder="Nome Completo" style="flex:2;" required />
+        <input type="text" id="emp-sector" placeholder="Setor" style="flex:1;" required />
+        <button type="submit" class="btn-primary" style="width: auto;">Salvar Funcionário</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Tag (RFID)</th>
+            <th>Nome</th>
+            <th>Setor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="employees-table"></tbody>
+      </table>
+    </div>
+
+    <!-- Tab Relatórios -->
+    <div class="tab-content" id="tab-relatorios">
+      <h3>Relatório Geral de Participação</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Setor</th>
+            <th>Total de Eventos Participados</th>
+            <th>Atrasos Registrados</th>
+          </tr>
+        </thead>
+        <tbody id="reports-table"></tbody>
+      </table>
+    </div>
+
+    <!-- Tab Backup -->
+    <div class="tab-content" id="tab-backup">
+      <h3>Exportação e Restauração de Dados</h3>
+      <p style="color:#64748b; margin-bottom: 1.5rem;">
+        Os dados são salvos diretamente no LocalStorage compartilhado entre o leitor e esta área.
+      </p>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn-primary" onclick="exportarBackup()" style="width: auto; background-color: var(--success);">📥 Exportar Backup (.JSON)</button>
+        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importarBackup(event)">
+        <button class="btn-primary" onclick="document.getElementById('import-file').click()" style="width: auto; background-color: #64748b;">📤 Restaurar Backup</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let eventos = [];
+    let funcionarios = [];
+    let eventoAtivoId = null;
+
+    carregarDados();
+
+    function carregarDados() {
+      eventos = JSON.parse(localStorage.getItem('eventos_roni')) || [];
+      funcionarios = JSON.parse(localStorage.getItem('funcionarios_roni')) || [];
+      eventoAtivoId = localStorage.getItem('evento_ativo_roni') || null;
+    }
+
+    function salvarTudo() {
+      localStorage.setItem('eventos_roni', JSON.stringify(eventos));
+      localStorage.setItem('funcionarios_roni', JSON.stringify(funcionarios));
+      localStorage.setItem('evento_ativo_roni', eventoAtivoId);
+    }
+
+    // Login Admin
+    document.getElementById('login-form').onsubmit = (e) => {
+      e.preventDefault();
+      const user = document.getElementById('admin-user').value;
+      const pass = document.getElementById('admin-pass').value;
+
+      if (user === 'admin' && pass === 'roni1515') {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('admin-dashboard').classList.add('active');
+        renderizarTudo();
+      } else {
+        alert('Usuário ou senha incorretos!');
+      }
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+
+      if (tabId === 'tab-relatorios') renderizarRelatorio();
+    }
+
+    function renderizarTudo() {
+      renderizarSeletorEventos();
+      renderizarPresencas();
+      renderizarFuncionarios();
+    }
+
+    function renderizarSeletorEventos() {
+      const select = document.getElementById('select-evento-ativo');
+      select.innerHTML = '';
+      eventos.forEach(evt => {
+        const opt = document.createElement('option');
+        opt.value = evt.id;
+        opt.textContent = `${evt.nome} (${evt.data})`;
+        if (evt.id === eventoAtivoId) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function mudarEventoAtivo(id) {
+      eventoAtivoId = id;
+      salvarTudo();
+      renderizarPresencas();
+    }
+
+    function criarNovoEvento() {
+      const nome = prompt('Nome do Evento:');
+      if (!nome) return;
+      const data = prompt('Data (DD/MM/AAAA):', new Date().toLocaleDateString('pt-BR'));
+      const horaInicio = prompt('Horário de Início (HH:MM):', '08:00');
+
+      const novo = {
+        id: 'evt_' + Date.now(),
+        nome: nome.trim(),
+        data: data ? data.trim() : new Date().toLocaleDateString('pt-BR'),
+        horaInicio: horaInicio ? horaInicio.trim() : '08:00',
+        registros: []
+      };
+
+      eventos.unshift(novo);
+      eventoAtivoId = novo.id;
+      salvarTudo();
+      renderizarTudo();
+    }
+
+    function renderizarPresencas() {
+      const tbody = document.getElementById('presencas-table');
+      tbody.innerHTML = '';
+      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+
+      if (!evtAtual || evtAtual.registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum registro neste evento.</td></tr>';
+        return;
+      }
+
+      evtAtual.registros.forEach(reg => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${reg.nome}</b></td>
+          <td>${reg.tag}</td>
+          <td>${reg.setor || 'Geral'}</td>
+          <td>${reg.hora}</td>
+          <td>${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}</td>
+          <td><button class="btn-sm btn-del-sm" onclick="removerRegistro('${reg.id}')">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function removerRegistro(regId) {
+      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+      if (!evtAtual) return;
+      
+      // Correção para exclusão de IDs no formato texto/string
+      evtAtual.registros = evtAtual.registros.filter(r => String(r.id) !== String(regId));
+      
+      salvarTudo();
+      renderizarPresencas();
+    }
+
+    // CRUD Funcionários
+    document.getElementById('employee-form').onsubmit = (e) => {
+      e.preventDefault();
+      const tag = document.getElementById('emp-tag').value.trim();
+      const nome = document.getElementById('emp-name').value.trim();
+      const setor = document.getElementById('emp-sector').value.trim();
+
+      const existeIdx = funcionarios.findIndex(f => f.tag.toLowerCase() === tag.toLowerCase());
+      if (existeIdx >= 0) {
+        funcionarios[existeIdx] = { id: funcionarios[existeIdx].id || String(Date.now()), tag, nome, setor };
+      } else {
+        funcionarios.push({ id: String(Date.now()), tag, nome, setor });
+      }
+
+      salvarTudo();
+      renderizarFuncionarios();
+      document.getElementById('employee-form').reset();
+    };
+
+    function renderizarFuncionarios() {
+      const tbody = document.getElementById('employees-table');
+      tbody.innerHTML = '';
+      funcionarios.forEach((f, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${f.tag}</b></td>
+          <td>${f.nome}</td>
+          <td>${f.setor || 'Geral'}</td>
+          <td><button class="btn-sm btn-del-sm" onclick="deletarFuncionario(${idx})">Excluir</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deletarFuncionario(idx) {
+      if (confirm('Deseja remover este funcionário?')) {
+        funcionarios.splice(idx, 1);
+        salvarTudo();
+        renderizarFuncionarios();
+      }
+    }
+
+    function renderizarRelatorio() {
+      const tbody = document.getElementById('reports-table');
+      tbody.innerHTML = '';
+
+      funcionarios.forEach(f => {
+        let totalEventos = 0;
+        let totalAtrasos = 0;
+
+        eventos.forEach(evt => {
+          const reg = evt.registros.find(r => r.tag.toLowerCase() === f.tag.toLowerCase());
+          if (reg) {
+            totalEventos++;
+            if (reg.atrasado) totalAtrasos++;
+          }
+        });
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><b>${f.nome}</b> (${f.tag})</td>
+          <td>${f.setor || 'Geral'}</td>
+          <td>${totalEventos} evento(s)</td>
+          <td><span style="color:${totalAtrasos > 0 ? 'red' : 'green'}; font-weight:bold;">${totalAtrasos} atraso(s)</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Exportação e Importação Formatadas
+    function exportarBackup() {
+      const colaboradoresExport = funcionarios.map((f, i) => ({
+        id: f.id || String(i + 1),
+        nome: f.nome,
+        rfid: f.tag
+      }));
+
+      const historicoCompletoExport = [];
+      eventos.forEach(evt => {
+        evt.registros.forEach(reg => {
+          historicoCompletoExport.push({
+            id: String(reg.id),
+            rfid: reg.tag,
+            nome: reg.nome,
+            start: reg.isoStart || new Date().toISOString(),
+            end: reg.isoStart || new Date().toISOString(),
+            duracaoSegundos: reg.atrasado ? 1200 : 600,
+            limiteSegundos: 900,
+            excedido: !!reg.atrasado
+          });
+        });
+      });
+
+      const backupEstrutura = {
+        colaboradores: colaboradoresExport,
+        historicoCompleto: historicoCompletoExport,
+        configLimitMinutes: 15,
+        pausasAtivas: {}
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupEstrutura, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `backup_dados_cafe_roni_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function importarBackup(event) {
+      const fileReader = new FileReader();
+      fileReader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+
+          if (parsed.colaboradores && Array.isArray(parsed.colaboradores)) {
+            funcionarios = parsed.colaboradores.map(c => ({
+              id: String(c.id),
+              tag: c.rfid,
+              nome: c.nome,
+              setor: 'Geral'
+            }));
+          }
+
+          if (parsed.historicoCompleto && Array.isArray(parsed.historicoCompleto)) {
+            const novosRegistros = parsed.historicoCompleto.map(h => ({
+              id: h.id,
+              tag: h.rfid,
+              nome: h.nome,
+              setor: 'Geral',
+              hora: h.start ? new Date(h.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+              atrasado: !!h.excedido,
+              isoStart: h.start
+            }));
+
+            let evtAtual = eventos.find(ev => ev.id === eventoAtivoId);
+            if (!evtAtual) {
+              evtAtual = {
+                id: 'evt_' + Date.now(),
+                nome: 'Evento Importado',
+                data: new Date().toLocaleDateString('pt-BR'),
+                horaInicio: '08:00',
+                registros: []
+              };
+              eventos.unshift(evtAtual);
+              eventoAtivoId = evtAtual.id;
+            }
+
+            evtAtual.registros = novosRegistros;
+          }
+
+          salvarTudo();
+          renderizarTudo();
+          alert('Backup restaurado com sucesso!');
+        } catch (err) {
+          alert('Erro ao importar backup.');
+        }
+      };
+      fileReader.readAsText(event.target.files[0]);
+    }
+  </script>
+</body>
+</html>
