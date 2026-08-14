@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Painel Admin — Gestão de Presença | Roni</title>
+  <title>Painel Admin — Gestão Completa | Roni</title>
   
   <link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
   <meta name="theme-color" content="#0056b3">
+
+  <!-- 📚 Bibliotecas jsPDF para PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
   <style>
     :root {
@@ -15,10 +19,9 @@
       --bg: #f4f6f9;
       --card-bg: #ffffff;
       --text: #212529;
-      --border: #e9ecef;
+      --border: #cbd5e1;
       --danger: #dc3545;
       --success: #28a745;
-      --warning: #ffc107;
     }
 
     * {
@@ -73,6 +76,36 @@
       gap: 1.5rem;
     }
 
+    /* 📌 NAVEGAÇÃO DE ABAS */
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.5rem;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: #e2e8f0;
+      color: #475569;
+      border: none;
+      padding: 0.65rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     .card {
       background-color: var(--card-bg);
       padding: 1.5rem;
@@ -85,7 +118,7 @@
       font-size: 1.3rem;
       margin-bottom: 1rem;
       color: var(--primary);
-      border-bottom: 2px solid var(--border);
+      border-bottom: 2px solid #f1f5f9;
       padding-bottom: 0.5rem;
     }
 
@@ -93,7 +126,7 @@
     select, input[type="text"], input[type="time"] {
       width: 100%;
       padding: 0.75rem;
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 0.95rem;
       margin-bottom: 1rem;
@@ -102,7 +135,29 @@
 
     select:focus, input:focus { border-color: var(--primary); }
 
-    .list-registros {
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .btn-success {
+      background-color: var(--success);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.2rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .list-items {
       list-style: none;
       display: flex;
       flex-direction: column;
@@ -111,9 +166,9 @@
       overflow-y: auto;
     }
 
-    .item-registro {
+    .item-card {
       background: #f8fafc;
-      border: 1px solid var(--border);
+      border: 1px solid #e2e8f0;
       padding: 1rem;
       border-radius: 10px;
       display: flex;
@@ -123,9 +178,9 @@
       gap: 0.8rem;
     }
 
-    .info-reg { display: flex; flex-direction: column; gap: 0.2rem; }
-    .nome-reg { font-weight: 700; color: #1e293b; font-size: 1rem; }
-    .detalhes-reg { font-size: 0.85rem; color: #64748b; }
+    .info-box { display: flex; flex-direction: column; gap: 0.2rem; }
+    .title-box { font-weight: 700; color: #1e293b; font-size: 1rem; }
+    .sub-box { font-size: 0.85rem; color: #64748b; }
 
     .badge-status {
       padding: 0.2rem 0.6rem;
@@ -137,11 +192,7 @@
     .badge-status.atrasado { background-color: #fef3c7; color: #b45309; }
     .badge-status.notempo { background-color: #d1fae5; color: #047857; }
 
-    .acoes-reg {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
+    .acoes-group { display: flex; align-items: center; gap: 0.5rem; }
 
     .btn-edit {
       background-color: #0284c7;
@@ -154,8 +205,6 @@
       cursor: pointer;
     }
 
-    .btn-edit:hover { background-color: #0369a1; }
-
     .btn-del {
       background-color: var(--danger);
       color: white;
@@ -167,9 +216,6 @@
       cursor: pointer;
     }
 
-    .btn-del:hover { background-color: #b91c1c; }
-
-    /* Caixa de edição inline */
     .edit-box {
       width: 100%;
       background-color: #e0f2fe;
@@ -182,33 +228,31 @@
       gap: 0.5rem;
     }
 
-    .edit-box input[type="time"] {
-      margin-bottom: 0;
-      padding: 0.4rem;
-      width: auto;
+    .edit-box input[type="time"] { margin-bottom: 0; padding: 0.4rem; width: auto; }
+
+    .export-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
     }
 
-    .btn-save-edit {
-      background-color: var(--success);
-      color: white;
+    .btn-export {
+      padding: 1.2rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
       border: none;
-      padding: 0.45rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
+      color: white;
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .btn-cancel-edit {
-      background-color: #64748b;
-      color: white;
-      border: none;
-      padding: 0.45rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .btn-export-pdf { background-color: #dc3545; }
+    .btn-export-csv { background-color: #198754; }
 
     footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
   </style>
@@ -221,59 +265,139 @@
   </header>
 
   <main>
-    <div class="card">
-      <h2>📋 Presença do Evento</h2>
-      
-      <label for="select-evento-admin">Selecione o Evento:</label>
-      <select id="select-evento-admin" onchange="carregarPresencasEvento(this.value)"></select>
-
-      <ul class="list-registros" id="lista-presencas">
-        <li style="text-align: center; color: #64748b; padding: 1rem;">Selecione um evento para visualizar as presenças.</li>
-      </ul>
+    <!-- 📌 Menu de Navegação por Abas -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="mudarAba('tab-presenca', this)">📋 Presença do Evento</button>
+      <button class="tab-btn" onclick="mudarAba('tab-colaboradores', this)">👥 Colaboradores</button>
+      <button class="tab-btn" onclick="mudarAba('tab-exportar', this)">📊 Relatórios & Exportar</button>
     </div>
+
+    <!-- 1️⃣ ABA: PRESENÇA DO EVENTO -->
+    <div id="tab-presenca" class="tab-content active">
+      <div class="card">
+        <h2>📋 Registros do Evento Selecionado</h2>
+        <label for="select-evento-admin">Selecione o Evento:</label>
+        <select id="select-evento-admin" onchange="carregarPresencasEvento(this.value)"></select>
+
+        <ul class="list-items" id="lista-presencas">
+          <li style="text-align: center; color: #64748b; padding: 1rem;">Selecione um evento para visualizar.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 2️⃣ ABA: GESTÃO DE COLABORADORES -->
+    <div id="tab-colaboradores" class="tab-content">
+      <div class="card">
+        <h2>➕ Cadastrar Novo Colaborador</h2>
+        <form onsubmit="cadastrarColaborador(event)">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem;">
+            <div>
+              <label>Nome do Colaborador:</label>
+              <input type="text" id="colab-nome" placeholder="Ex: Roni Silva" required />
+            </div>
+            <div>
+              <label>Setor:</label>
+              <input type="text" id="colab-setor" placeholder="Ex: Operações / Logística" />
+            </div>
+            <div>
+              <label>Tag RFID / Cartão:</label>
+              <input type="text" id="colab-tag" placeholder="Ex: 00123456" required />
+            </div>
+          </div>
+          <button type="submit" class="btn-primary" style="width: 100%;">Cadastrar Colaborador</button>
+        </form>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <h2>👥 Lista de Colaboradores Cadastrados</h2>
+        <ul class="list-items" id="lista-colaboradores"></ul>
+      </div>
+    </div>
+
+    <!-- 3️⃣ ABA: RELATÓRIOS E EXPORTAÇÃO -->
+    <div id="tab-exportar" class="tab-content">
+      <div class="card">
+        <h2>📊 Exportar Relatório de Presença</h2>
+        <label for="select-evento-export">Selecione o Evento para Exportar:</label>
+        <select id="select-evento-export"></select>
+
+        <div class="export-grid">
+          <button class="btn-export btn-export-pdf" onclick="exportarPDF()">
+            <span>📄 Exportar em PDF</span>
+            <small style="font-weight: normal;">Relatório formatado e pronto para impressão</small>
+          </button>
+          <button class="btn-export btn-export-csv" onclick="exportarCSV()">
+            <span>📊 Exportar em Excel (CSV)</span>
+            <small style="font-weight: normal;">Planilha compatível com Excel e Google Sheets</small>
+          </button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <footer>&copy; Painel Administrativo — Roni</footer>
 
   <script>
     let eventos = [];
+    let funcionarios = [];
     let idEdicaoAtual = null;
 
     init();
 
     function init() {
       carregarDados();
-      renderizarSelectEventos();
+      renderizarSelectsEventos();
+      carregarColaboradores();
     }
 
     function carregarDados() {
       eventos = JSON.parse(localStorage.getItem('eventos_roni')) || [];
+      funcionarios = JSON.parse(localStorage.getItem('funcionarios_roni')) || [];
     }
 
     function salvarTudo() {
       localStorage.setItem('eventos_roni', JSON.stringify(eventos));
+      localStorage.setItem('funcionarios_roni', JSON.stringify(funcionarios));
     }
 
-    function renderizarSelectEventos() {
-      const select = document.getElementById('select-evento-admin');
-      select.innerHTML = '';
+    // 🔄 Alternar Abas
+    function mudarAba(abaId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(tb => tb.classList.remove('active'));
+      document.getElementById(abaId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function renderizarSelectsEventos() {
+      const selectAdmin = document.getElementById('select-evento-admin');
+      const selectExport = document.getElementById('select-evento-export');
+      
+      selectAdmin.innerHTML = '';
+      selectExport.innerHTML = '';
 
       if (eventos.length === 0) {
-        select.innerHTML = '<option value="">Nenhum evento cadastrado</option>';
+        selectAdmin.innerHTML = '<option value="">Nenhum evento cadastrado</option>';
+        selectExport.innerHTML = '<option value="">Nenhum evento cadastrado</option>';
         return;
       }
 
       eventos.forEach(evt => {
-        const opt = document.createElement('option');
-        opt.value = evt.id;
-        opt.textContent = `${evt.nome} (${evt.data} às ${evt.horaInicio || '00:00'})`;
-        select.appendChild(opt);
+        const opt1 = document.createElement('option');
+        opt1.value = evt.id;
+        opt1.textContent = `${evt.nome} (${evt.data} às ${evt.horaInicio || '00:00'})`;
+        selectAdmin.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = evt.id;
+        opt2.textContent = `${evt.nome} (${evt.data} às ${evt.horaInicio || '00:00'})`;
+        selectExport.appendChild(opt2);
       });
 
-      // Carrega o primeiro evento por padrão
       carregarPresencasEvento(eventos[0].id);
     }
 
+    // 📋 PRESENÇAS DO EVENTO
     function carregarPresencasEvento(eventoId) {
       idEdicaoAtual = null;
       const lista = document.getElementById('lista-presencas');
@@ -287,20 +411,19 @@
 
       evt.registros.forEach(reg => {
         const li = document.createElement('li');
-        li.className = 'item-registro';
-        li.id = `reg-${reg.id}`;
+        li.className = 'item-card';
 
         li.innerHTML = `
-          <div class="info-reg">
-            <span class="nome-reg">${reg.nome}</span>
-            <span class="detalhes-reg">Setor: ${reg.setor || 'Geral'} | Tag RFID: ${reg.tag}</span>
-            <span class="detalhes-reg">⏰ Horário: <strong>${reg.hora}</strong> 
+          <div class="info-box">
+            <span class="title-box">${reg.nome}</span>
+            <span class="sub-box">Setor: ${reg.setor || 'Geral'} | Tag RFID: ${reg.tag}</span>
+            <span class="sub-box">⏰ Horário: <strong>${reg.hora}</strong> 
               <span class="badge-status ${reg.atrasado ? 'atrasado' : 'notempo'}">
                 ${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}
               </span>
             </span>
           </div>
-          <div class="acoes-reg">
+          <div class="acoes-group">
             <button class="btn-edit" onclick="abrirEdicaoHorario('${evt.id}', '${reg.id}', '${reg.hora}')">✏️ Editar Horário</button>
             <button class="btn-del" onclick="removerRegistro('${evt.id}', '${reg.id}')">🗑️ Remover</button>
           </div>
@@ -311,37 +434,28 @@
       });
     }
 
-    // ✏️ ABRIR FORMULÁRIO DE EDIÇÃO DE HORÁRIO INLINE
     function abrirEdicaoHorario(eventoId, registroId, horaAtual) {
-      // Se já houver outro em edição, fecha
-      if (idEdicaoAtual && idEdicaoAtual !== registroId) {
-        cancelarEdicao(idEdicaoAtual);
-      }
-
+      if (idEdicaoAtual && idEdicaoAtual !== registroId) cancelarEdicao(idEdicaoAtual);
       idEdicaoAtual = registroId;
+
       const box = document.getElementById(`box-edit-${registroId}`);
       box.style.display = 'block';
-
       box.innerHTML = `
         <div class="edit-box">
           <label style="margin:0; font-size:0.85rem;">Novo Horário:</label>
           <input type="time" id="input-hora-${registroId}" value="${horaAtual}" required />
-          <button class="btn-save-edit" onclick="salvarNovoHorario('${eventoId}', '${registroId}')">Salvar</button>
-          <button class="btn-cancel-edit" onclick="cancelarEdicao('${registroId}')">Cancelar</button>
+          <button class="btn-success" onclick="salvarNovoHorario('${eventoId}', '${registroId}')">Salvar</button>
+          <button class="btn-del" onclick="cancelarEdicao('${registroId}')">Cancelar</button>
         </div>
       `;
     }
 
     function cancelarEdicao(registroId) {
       const box = document.getElementById(`box-edit-${registroId}`);
-      if (box) {
-        box.style.display = 'none';
-        box.innerHTML = '';
-      }
+      if (box) { box.style.display = 'none'; box.innerHTML = ''; }
       idEdicaoAtual = null;
     }
 
-    // 💾 SALVAR HORÁRIO ALTERADO E RECALCULAR ATRASO
     function salvarNovoHorario(eventoId, registroId) {
       const novahora = document.getElementById(`input-hora-${registroId}`).value;
       if (!novahora) return;
@@ -352,30 +466,144 @@
       const reg = evt.registros.find(r => r.id === registroId);
       if (!reg) return;
 
-      // Atualiza a hora
       reg.hora = novahora;
-
-      // Recalcula se o funcionário ficou atrasado de acordo com o horário do evento
-      if (evt.horaInicio) {
-        reg.atrasado = novahora > evt.horaInicio;
-      } else {
-        reg.atrasado = false;
-      }
+      if (evt.horaInicio) reg.atrasado = novahora > evt.horaInicio;
 
       salvarTudo();
       carregarPresencasEvento(eventoId);
     }
 
-    // 🗑️ REMOVER REGISTRO DE PRESENÇA
     function removerRegistro(eventoId, registroId) {
-      if (!confirm('Tem certeza que deseja remover esta presença?')) return;
-
+      if (!confirm('Remover esta presença do evento?')) return;
       const evt = eventos.find(e => e.id === eventoId);
       if (!evt) return;
 
       evt.registros = evt.registros.filter(r => r.id !== registroId);
       salvarTudo();
       carregarPresencasEvento(eventoId);
+    }
+
+    // 👥 GESTÃO DE COLABORADORES
+    function cadastrarColaborador(e) {
+      e.preventDefault();
+      const nome = document.getElementById('colab-nome').value.trim();
+      const setor = document.getElementById('colab-setor').value.trim() || 'Geral';
+      const tag = document.getElementById('colab-tag').value.trim();
+
+      if (!nome || !tag) return;
+
+      funcionarios.push({ id: 'func_' + Date.now(), nome, setor, tag });
+      salvarTudo();
+
+      document.getElementById('colab-nome').value = '';
+      document.getElementById('colab-setor').value = '';
+      document.getElementById('colab-tag').value = '';
+
+      carregarColaboradores();
+      alert('✓ Colaborador cadastrado com sucesso!');
+    }
+
+    function carregarColaboradores() {
+      const lista = document.getElementById('lista-colaboradores');
+      lista.innerHTML = '';
+
+      if (funcionarios.length === 0) {
+        lista.innerHTML = '<li style="text-align: center; color: #64748b; padding: 1rem;">Nenhum colaborador cadastrado.</li>';
+        return;
+      }
+
+      funcionarios.forEach(f => {
+        const li = document.createElement('li');
+        li.className = 'item-card';
+        li.innerHTML = `
+          <div class="info-box">
+            <span class="title-box">${f.nome}</span>
+            <span class="sub-box">Setor: ${f.setor} | Tag RFID: <strong>${f.tag}</strong></span>
+          </div>
+          <button class="btn-del" onclick="excluirColaborador('${f.id}')">🗑️ Excluir</button>
+        `;
+        lista.appendChild(li);
+      });
+    }
+
+    function excluirColaborador(id) {
+      if (!confirm('Excluir este colaborador?')) return;
+      funcionarios = funcionarios.filter(f => f.id !== id);
+      salvarTudo();
+      carregarColaboradores();
+    }
+
+    // 📊 EXPORTAR PDF
+    function exportarPDF() {
+      const evtId = document.getElementById('select-evento-export').value;
+      const evt = eventos.find(e => e.id === evtId);
+
+      if (!evt || !evt.registros || evt.registros.length === 0) {
+        alert('Não há registros de presença para exportar neste evento.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFillColor(0, 86, 179);
+      doc.rect(0, 0, 210, 28, 'F');
+
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('Relatório de Presença — Roni', 14, 18);
+
+      doc.setTextColor(33, 37, 41);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Evento: ${evt.nome}`, 14, 38);
+      doc.text(`Data: ${evt.data} | Horário Previsto: ${evt.horaInicio || '00:00'}`, 14, 45);
+
+      const tableRows = [];
+      [...evt.registros].reverse().forEach((reg, idx) => {
+        tableRows.push([
+          idx + 1,
+          reg.nome,
+          reg.setor || 'Geral',
+          reg.tag,
+          reg.hora,
+          reg.atrasado ? 'Atrasado' : 'No Tempo'
+        ]);
+      });
+
+      doc.autoTable({
+        startY: 52,
+        head: [['#', 'Nome', 'Setor', 'Tag RFID', 'Horário', 'Status']],
+        body: tableRows,
+        headStyles: { fillColor: [0, 86, 179] }
+      });
+
+      doc.save(`Relatorio_${evt.nome.replace(/\s+/g, '_')}.pdf`);
+    }
+
+    // 📊 EXPORTAR CSV (EXCEL)
+    function exportarCSV() {
+      const evtId = document.getElementById('select-evento-export').value;
+      const evt = eventos.find(e => e.id === evtId);
+
+      if (!evt || !evt.registros || evt.registros.length === 0) {
+        alert('Não há registros de presença para exportar neste evento.');
+        return;
+      }
+
+      let csv = 'Nome;Setor;Tag RFID;Horario;Status\n';
+
+      [...evt.registros].reverse().forEach(reg => {
+        const status = reg.atrasado ? 'Atrasado' : 'No Tempo';
+        csv += `"${reg.nome}";"${reg.setor || 'Geral'}";"${reg.tag}";"${reg.hora}";"${status}"\n`;
+      });
+
+      const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `Relatorio_${evt.nome.replace(/\s+/g, '_')}.csv`;
+      link.click();
     }
   </script>
 </body>
