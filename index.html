@@ -2,17 +2,12 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <!-- Viewport ajustada para impedir zoom automático incômodo no celular -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistema de Ponto — Leitor de Tags | Roni</title>
-
-  <!-- Ícone da Aba do Navegador (Favicon) -->
-<link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
   
-  <!-- Configurações PWA -->
+  <link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0056b3">
-  <link rel="apple-touch-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
 
   <style>
     :root {
@@ -29,7 +24,7 @@
       margin: 0; 
       padding: 0; 
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-      -webkit-tap-highlight-color: transparent; /* Remove o brilho azul feio ao tocar no celular */
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
@@ -53,11 +48,7 @@
 
     header img { max-height: 55px; width: auto; }
 
-    .header-actions { 
-      display: flex; 
-      gap: 0.5rem; 
-      width: auto;
-    }
+    .header-actions { display: flex; gap: 0.5rem; width: auto; }
 
     .btn-header {
       background-color: transparent;
@@ -72,7 +63,8 @@
       align-items: center;
       justify-content: center;
       transition: all 0.2s;
-      min-height: 44px; /* Tamanho mínimo para toque no celular */
+      min-height: 44px;
+      text-decoration: none;
     }
 
     .btn-header:active { transform: scale(0.98); }
@@ -115,10 +107,10 @@
     .card h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
     .card p { font-size: 0.9rem; color: #64748b; margin-bottom: 1.2rem; }
 
-    input[type="text"], input[type="password"] {
+    input[type="text"] {
       width: 100%;
       padding: 1rem;
-      font-size: 1.1rem; /* Tamanho 16px+ evita auto-zoom no iOS */
+      font-size: 1.1rem;
       border: 2px solid #cbd5e1;
       border-radius: 10px;
       outline: none;
@@ -141,8 +133,6 @@
       cursor: pointer;
       min-height: 48px;
     }
-
-    .btn-primary:active { background-color: var(--primary-hover); }
 
     #status-msg {
       margin-top: 1.2rem;
@@ -173,8 +163,6 @@
       padding-bottom: 0.75rem;
       border-bottom: 2px solid var(--border);
     }
-
-    .presence-header h3 { font-size: 1.1rem; }
 
     .badge {
       background-color: var(--primary);
@@ -211,75 +199,16 @@
     .status-badge.atrasado { background-color: #fef3c7; color: #b45309; }
     .status-badge.notempo { background-color: #d1fae5; color: #047857; }
 
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.6);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    .modal-card {
-      background: white;
-      padding: 1.8rem;
-      border-radius: 16px;
-      max-width: 400px;
-      width: 100%;
-      text-align: center;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 12px; right: 15px;
-      background: none; border: none;
-      font-size: 1.5rem; cursor: pointer; color: #94a3b8;
-      padding: 0.5rem;
-    }
-
     footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
 
-    /* 📱 ADAPTAÇÕES ESPECÍFICAS PARA TELA DE CELULAR (Abaixo de 600px) */
     @media (max-width: 600px) {
-      header {
-        justify-content: center;
-        text-align: center;
-        padding: 0.8rem 1rem;
-      }
-
-      .header-actions {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .btn-header {
-        flex: 1;
-        font-size: 0.85rem;
-        padding: 0.5rem;
-      }
-
-      main {
-        padding: 1rem 0.75rem;
-      }
-
-      .card {
-        padding: 1.25rem 1rem;
-      }
-
-      .card h2 { font-size: 1.2rem; }
-
-      .presence-item {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 0.5rem;
-      }
-
-      .presence-item > div:last-child {
-        align-self: flex-end;
-      }
+      header { justify-content: center; text-align: center; padding: 0.8rem 1rem; }
+      .header-actions { width: 100%; justify-content: space-between; }
+      .btn-header { flex: 1; font-size: 0.85rem; padding: 0.5rem; }
+      main { padding: 1rem 0.75rem; }
+      .card { padding: 1.25rem 1rem; }
+      .presence-item { align-items: flex-start; flex-direction: column; gap: 0.5rem; }
+      .presence-item > div:last-child { align-self: flex-end; }
     }
   </style>
 </head>
@@ -289,7 +218,8 @@
     <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
     <div class="header-actions">
       <button class="btn-header" onclick="toggleFullScreen()">⛶ Tela Cheia</button>
-      <button class="btn-header btn-admin" onclick="abrirModalAdmin()">🔐 Admin</button>
+      <!-- 🟢 REDIRECIONA DIRETO PARA ADMIN (Solicita senha 1 vez lá) -->
+      <a href="admin.html" class="btn-header btn-admin">🔐 Admin</a>
     </div>
   </header>
 
@@ -310,7 +240,6 @@
           autofocus 
           required 
           autocomplete="off"
-          enterkeyhint="done"
         />
         <button type="submit" class="btn-primary">Confirmar Presença</button>
       </form>
@@ -330,21 +259,7 @@
     </div>
   </main>
 
-  <div class="modal-overlay" id="modal-login">
-    <div class="modal-card">
-      <button class="modal-close" onclick="fecharModalAdmin()">&times;</button>
-      <h3 style="margin-bottom: 1.2rem;">Acesso Administrativo</h3>
-      <form id="modal-login-form">
-        <input type="text" id="modal-user" placeholder="Usuário" required />
-        <input type="password" id="modal-pass" placeholder="Senha" required />
-        <button type="submit" class="btn-primary">Entrar no Painel</button>
-      </form>
-    </div>
-  </div>
-
-  <footer>
-    &copy; Confirmação de Presença — Roni
-  </footer>
+  <footer>&copy; Confirmação de Presença — Roni</footer>
 
   <script>
     let eventos = [];
@@ -359,10 +274,7 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     function tocarSom(tipo) {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       if (tipo === 'sucesso') {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
@@ -414,7 +326,7 @@
         const evtInicial = {
           id: 'evt_' + Date.now(),
           nome: 'Evento Principal',
-          data: getFormattedDateOnly(),
+          data: new Date().toLocaleDateString('pt-BR'),
           horaInicio: '08:00',
           registros: []
         };
@@ -434,21 +346,13 @@
 
     function manterFocoNoInput() {
       tagInput.focus();
-      document.addEventListener('click', (e) => {
-        if (!document.getElementById('modal-login').contains(e.target)) {
-          tagInput.focus();
-        }
-      });
+      document.addEventListener('click', () => tagInput.focus());
     }
 
     function salvarTudo() {
       localStorage.setItem('eventos_roni', JSON.stringify(eventos));
       localStorage.setItem('funcionarios_roni', JSON.stringify(funcionarios));
       localStorage.setItem('evento_ativo_roni', eventoAtivoId);
-    }
-
-    function getFormattedDateOnly() {
-      return new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     }
 
     function getBrasiliaTimeOnly() {
@@ -467,9 +371,8 @@
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
       if (jaRegistrado) {
         tocarSom('alerta');
-        exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada neste evento!`, 'alerta');
+        exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada!`, 'alerta');
         tagInput.value = '';
-        tagInput.focus();
         return;
       }
 
@@ -506,7 +409,6 @@
       }
 
       tagInput.value = '';
-      tagInput.focus();
     };
 
     function renderizarPresencas() {
@@ -552,37 +454,6 @@
       } else if (document.exitFullscreen) {
         document.exitFullscreen();
       }
-    }
-
-    function abrirModalAdmin() {
-      document.getElementById('modal-login').style.display = 'flex';
-      document.getElementById('modal-user').focus();
-    }
-
-    function fecharModalAdmin() {
-      document.getElementById('modal-login').style.display = 'none';
-      tagInput.focus();
-    }
-
-    document.getElementById('modal-login-form').onsubmit = (e) => {
-      e.preventDefault();
-      const user = document.getElementById('modal-user').value;
-      const pass = document.getElementById('modal-pass').value;
-
-      if (user === 'admin' && pass === 'roni1515') {
-        window.location.href = 'admin.html';
-      } else {
-        alert('Usuário ou senha incorretos!');
-      }
-    };
-
-    // Registro PWA
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker ativo!'))
-          .catch(err => console.log('Erro no Service Worker:', err));
-      });
     }
   </script>
 </body>
