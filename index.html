@@ -294,6 +294,46 @@
     const statusMsg = document.getElementById('status-msg');
     const tagInput = document.getElementById('tag-input');
 
+    // Contexto de Áudio Nativo
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Função para gerar os Bips
+    function tocarSom(tipo) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      if (tipo === 'sucesso') {
+        // Bip agudo e limpo (180ms)
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime); // Nota C6
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.18);
+      } else {
+        // Bip grave duplo (alerta / erro / atraso)
+        const playBeep = (delay) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(300, audioCtx.currentTime + delay);
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + delay + 0.12);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(audioCtx.currentTime + delay);
+          osc.stop(audioCtx.currentTime + delay + 0.12);
+        };
+        playBeep(0);
+        playBeep(0.15);
+      }
+    }
+
     init();
 
     function init() {
@@ -368,6 +408,7 @@
 
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
       if (jaRegistrado) {
+        tocarSom('alerta'); // 🔊 Som de Alerta (Já registrado)
         exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada neste evento!`, 'alerta');
         tagInput.value = '';
         tagInput.focus();
@@ -398,7 +439,14 @@
       salvarTudo();
       renderizarPresencas();
 
-      exibirMensagem(`✓ Presença confirmada: ${nomeExibicao} ${atrasado ? '(Atrasado)' : ''}`, atrasado ? 'erro' : 'sucesso');
+      if (atrasado) {
+        tocarSom('alerta'); // 🔊 Som de Atraso
+        exibirMensagem(`✓ Presença confirmada: ${nomeExibicao} (Atrasado)`, 'erro');
+      } else {
+        tocarSom('sucesso'); // 🔊 Som de Sucesso
+        exibirMensagem(`✓ Presença confirmada: ${nomeExibicao}`, 'sucesso');
+      }
+
       tagInput.value = '';
       tagInput.focus();
     };
