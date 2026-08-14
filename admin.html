@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Painel Administrativo | Roni</title>
-
-<!-- Ícone da Aba do Navegador (Favicon) -->
-<link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
   
+  <!-- Ícone da Aba (Favicon) -->
+  <link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
+
   <style>
     :root {
       --primary: #0056b3;
@@ -68,7 +68,7 @@
       border: 2px solid #dee2e6;
       border-radius: 8px;
       outline: none;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
     }
 
     .btn-primary {
@@ -94,7 +94,6 @@
 
     .admin-layout.active { display: flex; flex-direction: column; }
 
-    /* Abas adaptáveis com rolagem horizontal no celular */
     .admin-tabs {
       display: flex;
       gap: 0.5rem;
@@ -124,7 +123,6 @@
     .tab-content { display: none; background: white; padding: 1.2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .tab-content.active { display: block; }
 
-    /* Envolver tabelas para rolagem no celular */
     .table-responsive {
       width: 100%;
       overflow-x: auto;
@@ -148,11 +146,43 @@
       gap: 0.8rem;
     }
 
+    /* Estilos da Presença Manual */
+    .manual-presence-box {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+    }
+
+    .manual-presence-box h4 {
+      margin-bottom: 0.6rem;
+      color: var(--primary);
+      font-size: 1rem;
+    }
+
+    .manual-input-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-direction: column;
+      position: relative;
+    }
+
     @media (min-width: 600px) {
       .event-selector-box {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
+      }
+      .manual-input-group {
+        flex-direction: row;
+      }
+      .manual-input-group input {
+        margin-bottom: 0;
+      }
+      .manual-input-group button {
+        width: auto;
+        white-space: nowrap;
       }
     }
   </style>
@@ -195,7 +225,28 @@
         <button class="btn-sm" onclick="criarNovoEvento()" style="background: var(--success); color: white; padding: 0.6rem;">+ Criar Evento</button>
       </div>
 
-      <h3>Presenças</h3>
+      <!-- ✏️ Bloco de Presença Manual por Nome -->
+      <div class="manual-presence-box">
+        <h4>✍️ Marcar Presença Manualmente</h4>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.6rem;">
+          Digite o nome do funcionário para buscar e registrar a presença sem usar a tag:
+        </p>
+        <div class="manual-input-group">
+          <input 
+            type="text" 
+            id="manual-search-name" 
+            list="list-funcionarios" 
+            placeholder="Digite o nome ou setor..." 
+            autocomplete="off"
+          />
+          <datalist id="list-funcionarios"></datalist>
+          <button class="btn-primary" onclick="confirmarPresencaManual()" style="background-color: var(--success);">
+            + Marcar Presença
+          </button>
+        </div>
+      </div>
+
+      <h3>Presenças do Evento</h3>
       <div class="table-responsive">
         <table>
           <thead>
@@ -289,6 +340,10 @@
       localStorage.setItem('evento_ativo_roni', eventoAtivoId);
     }
 
+    function getBrasiliaTimeOnly() {
+      return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
+    }
+
     document.getElementById('login-form').onsubmit = (e) => {
       e.preventDefault();
       const user = document.getElementById('admin-user').value;
@@ -315,6 +370,7 @@
 
     function renderizarTudo() {
       renderizarSeletorEventos();
+      atualizarDatalistFuncionarios();
       renderizarPresencas();
       renderizarFuncionarios();
     }
@@ -357,6 +413,76 @@
       renderizarTudo();
     }
 
+    // Atualiza as opções do Datalist para autocomplete
+    function atualizarDatalistFuncionarios() {
+      const datalist = document.getElementById('list-funcionarios');
+      datalist.innerHTML = '';
+      funcionarios.forEach(f => {
+        const option = document.createElement('option');
+        option.value = `${f.nome} (${f.setor || 'Geral'})`;
+        datalist.appendChild(option);
+      });
+    }
+
+    // 🎯 Lógica para dar presença manual por Nome
+    function confirmarPresencaManual() {
+      carregarDados();
+      const inputVal = document.getElementById('manual-search-name').value.trim();
+      if (!inputVal) {
+        alert('Por favor, digite ou selecione um funcionário!');
+        return;
+      }
+
+      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+      if (!evtAtual) {
+        alert('Nenhum evento ativo selecionado!');
+        return;
+      }
+
+      // Procura o funcionário cadastrado que corresponde ao valor digitado
+      const func = funcionarios.find(f => 
+        inputVal.toLowerCase().includes(f.nome.toLowerCase()) || 
+        f.nome.toLowerCase() === inputVal.toLowerCase() ||
+        f.tag.toLowerCase() === inputVal.toLowerCase()
+      );
+
+      if (!func) {
+        alert('Funcionário não localizado no cadastro. Por favor, cadastre-o primeiro na aba "Funcionários".');
+        return;
+      }
+
+      // Verifica se a presença já foi registrada
+      const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === func.tag.toLowerCase());
+      if (jaRegistrado) {
+        alert(`⚠️ ATENÇÃO: A presença de "${func.nome}" já foi registrada neste evento!`);
+        document.getElementById('manual-search-name').value = '';
+        return;
+      }
+
+      const horaAtual = getBrasiliaTimeOnly();
+      let atrasado = false;
+      if (evtAtual.horaInicio) {
+        atrasado = horaAtual > evtAtual.horaInicio;
+      }
+
+      const novoRegistro = {
+        id: 'pausa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+        tag: func.tag,
+        nome: func.nome,
+        setor: func.setor || 'Geral',
+        hora: horaAtual,
+        atrasado: atrasado,
+        isoStart: new Date().toISOString()
+      };
+
+      evtAtual.registros.unshift(novoRegistro);
+      salvarTudo();
+      renderizarPresencas();
+
+      alert(`✓ Presença registrada com sucesso para: ${func.nome}`);
+      document.getElementById('manual-search-name').value = '';
+    }
+
     function renderizarPresencas() {
       const tbody = document.getElementById('presencas-table');
       tbody.innerHTML = '';
@@ -382,6 +508,7 @@
     }
 
     function removerRegistro(regId) {
+      if (!confirm('Deseja realmente excluir este registro de presença?')) return;
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
       evtAtual.registros = evtAtual.registros.filter(r => String(r.id) !== String(regId));
@@ -404,6 +531,7 @@
 
       salvarTudo();
       renderizarFuncionarios();
+      atualizarDatalistFuncionarios();
       document.getElementById('employee-form').reset();
     };
 
@@ -427,6 +555,7 @@
         funcionarios.splice(idx, 1);
         salvarTudo();
         renderizarFuncionarios();
+        atualizarDatalistFuncionarios();
       }
     }
 
