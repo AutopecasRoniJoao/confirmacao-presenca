@@ -88,17 +88,63 @@
       width: 100%;
     }
 
-    .event-banner {
+    /* 🎯 Painel de Evento e Seleção Rápida */
+    .event-quick-bar {
       background-color: #e0f2fe;
-      color: #0369a1;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.95rem;
       border: 1px solid #bae6fd;
-      text-align: center;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .event-quick-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .event-quick-header label {
+      font-weight: 700;
+      color: #0369a1;
+      font-size: 0.95rem;
+    }
+
+    .event-controls {
+      display: flex;
+      gap: 0.5rem;
       width: 100%;
     }
+
+    .select-event {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: 8px;
+      border: 1px solid #7dd3fc;
+      background-color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0369a1;
+      outline: none;
+    }
+
+    .btn-quick-add {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+
+    .btn-quick-add:hover { background-color: var(--primary-hover); }
 
     .card {
       background-color: var(--card-bg);
@@ -112,14 +158,14 @@
     .card h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
     .card p { font-size: 0.9rem; color: #64748b; margin-bottom: 1.2rem; }
 
-    input[type="text"] {
+    input[type="text"], input[type="date"], input[type="time"] {
       width: 100%;
-      padding: 1rem;
-      font-size: 1.1rem;
+      padding: 0.85rem 1rem;
+      font-size: 1rem;
       border: 2px solid #cbd5e1;
       border-radius: 10px;
       outline: none;
-      margin-bottom: 1rem;
+      margin-bottom: 0.8rem;
       text-align: center;
       transition: border-color 0.2s;
     }
@@ -155,9 +201,7 @@
       border-bottom: 1px solid #cbd5e1;
     }
 
-    .divider span {
-      padding: 0 0.8rem;
-    }
+    .divider span { padding: 0 0.8rem; }
 
     .manual-box {
       background-color: #f8fafc;
@@ -274,6 +318,38 @@
     .status-badge.atrasado { background-color: #fef3c7; color: #b45309; }
     .status-badge.notempo { background-color: #d1fae5; color: #047857; }
 
+    /* Modal Criar Evento */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .modal-close {
+      background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;
+    }
+
     footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
 
     @media (max-width: 600px) {
@@ -298,12 +374,19 @@
   </header>
 
   <main>
-    <div class="card">
-      <div id="active-event-container" style="display: none;">
-        <div class="event-banner" id="event-banner-text">Evento: --</div>
+    <!-- ⚡ BARRA DE TRANSIÇÃO E SELEÇÃO RÁPIDA DE EVENTO -->
+    <div class="event-quick-bar">
+      <div class="event-quick-header">
+        <label for="select-event-active">📌 Evento em Andamento:</label>
       </div>
+      <div class="event-controls">
+        <select id="select-event-active" class="select-event" onchange="trocarEventoAtivo(this.value)"></select>
+        <button class="btn-quick-add" onclick="abrirModalNovoEvento()">➕ Novo Evento</button>
+      </div>
+    </div>
 
-      <h2 style="margin-top: 0.8rem;">Aproxime a sua Tag</h2>
+    <div class="card">
+      <h2 style="margin-top: 0.2rem;">Aproxime a sua Tag</h2>
       <p>O leitor registrará automaticamente sem a necessidade de clicar na tela.</p>
 
       <!-- 📡 Entrada por Leitor RFID -->
@@ -363,6 +446,33 @@
     </div>
   </main>
 
+  <!-- 🪟 MODAL DE CRIAÇÃO RÁPIDA DE EVENTO -->
+  <div class="modal-overlay" id="modal-novo-evento">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>➕ Criar Novo Evento</h3>
+        <button class="modal-close" onclick="fecharModalNovoEvento()">&times;</button>
+      </div>
+      <form onsubmit="salvarNovoEventoRapido(event)">
+        <label style="display:block; text-align:left; font-weight:600; margin-bottom:0.3rem;">Nome do Evento:</label>
+        <input type="text" id="quick-evt-nome" placeholder="Ex: Reunião Geral / Treinamento" required style="text-align: left;" />
+
+        <div style="display: flex; gap: 0.5rem;">
+          <div style="flex: 1;">
+            <label style="display:block; text-align:left; font-weight:600; margin-bottom:0.3rem;">Data:</label>
+            <input type="date" id="quick-evt-data" required />
+          </div>
+          <div style="flex: 1;">
+            <label style="display:block; text-align:left; font-weight:600; margin-bottom:0.3rem;">Início:</label>
+            <input type="time" id="quick-evt-hora" required />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" style="margin-top: 0.5rem;">Criar e Ativar Evento</button>
+      </form>
+    </div>
+  </div>
+
   <footer>&copy; Confirmação de Presença — Roni</footer>
 
   <script>
@@ -376,6 +486,7 @@
     const statusMsg = document.getElementById('status-msg');
     const tagInput = document.getElementById('tag-input');
     const manualInput = document.getElementById('manual-search-name');
+    const selectEvent = document.getElementById('select-event-active');
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -414,12 +525,14 @@
 
     function init() {
       carregarDados();
+      renderizarSelectEventos();
       renderizarPresencas();
       atualizarDatalistFuncionarios();
       configurarAutoFoco();
 
       window.addEventListener('storage', () => {
         carregarDados();
+        renderizarSelectEventos();
         renderizarPresencas();
         atualizarDatalistFuncionarios();
       });
@@ -444,12 +557,24 @@
       } else if (!eventoAtivoId || !eventos.find(e => e.id === eventoAtivoId)) {
         eventoAtivoId = eventos[0].id;
       }
+    }
 
-      const atual = eventos.find(e => e.id === eventoAtivoId);
-      if (atual) {
-        document.getElementById('active-event-container').style.display = 'block';
-        document.getElementById('event-banner-text').textContent = `Evento: ${atual.nome} (${atual.data} às ${atual.horaInicio || '00:00'})`;
-      }
+    function renderizarSelectEventos() {
+      selectEvent.innerHTML = '';
+      eventos.forEach(evt => {
+        const opt = document.createElement('option');
+        opt.value = evt.id;
+        opt.textContent = `${evt.nome} (${evt.data} às ${evt.horaInicio || '00:00'})`;
+        if (evt.id === eventoAtivoId) opt.selected = true;
+        selectEvent.appendChild(opt);
+      });
+    }
+
+    function trocarEventoAtivo(novoId) {
+      eventoAtivoId = novoId;
+      salvarTudo();
+      renderizarPresencas();
+      modoBuscaManual(false);
     }
 
     function salvarTudo() {
@@ -458,10 +583,56 @@
       localStorage.setItem('evento_ativo_roni', eventoAtivoId);
     }
 
+    // Modal de Novo Evento
+    function abrirModalNovoEvento() {
+      document.getElementById('modal-novo-evento').style.display = 'flex';
+      document.getElementById('quick-evt-data').valueAsDate = new Date();
+      document.getElementById('quick-evt-hora').value = '08:00';
+      document.getElementById('quick-evt-nome').focus();
+    }
+
+    function fecharModalNovoEvento() {
+      document.getElementById('modal-novo-evento').style.display = 'none';
+      modoBuscaManual(false);
+    }
+
+    function salvarNovoEventoRapido(e) {
+      e.preventDefault();
+      const nome = document.getElementById('quick-evt-nome').value.trim();
+      const dataRaw = document.getElementById('quick-evt-data').value;
+      const hora = document.getElementById('quick-evt-hora').value;
+
+      if (!nome || !dataRaw || !hora) return;
+
+      const [ano, mes, dia] = dataRaw.split('-');
+      const dataFormatada = `${dia}/${mes}/${ano}`;
+
+      const novoEvt = {
+        id: 'evt_' + Date.now(),
+        nome: nome,
+        data: dataFormatada,
+        horaInicio: hora,
+        registros: []
+      };
+
+      eventos.unshift(novoEvt);
+      eventoAtivoId = novoEvt.id;
+      salvarTudo();
+
+      document.getElementById('quick-evt-nome').value = '';
+      fecharModalNovoEvento();
+      renderizarSelectEventos();
+      renderizarPresencas();
+      exibirMensagem(`✓ Evento "${nome}" criado e ativado com sucesso!`, 'sucesso');
+    }
+
     function configurarAutoFoco() {
       tagInput.focus();
       document.addEventListener('click', (e) => {
-        if (!manualInput.contains(e.target) && e.target.id !== 'manual-search-name') {
+        const modal = document.getElementById('modal-novo-evento');
+        if (modal.style.display === 'flex') return;
+
+        if (!manualInput.contains(e.target) && e.target.id !== 'manual-search-name' && !e.target.closest('.event-quick-bar')) {
           modoBuscaManual(false);
         }
       });
@@ -606,7 +777,6 @@
       });
     }
 
-    // 📄 GERADOR DE PDF DO EVENTO ATIVO
     function exportarEventoPDF() {
       carregarDados();
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
@@ -619,8 +789,7 @@
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
-      // Cabeçalho do PDF
-      doc.setFillColor(0, 86, 179); // Cor azul da marca Roni
+      doc.setFillColor(0, 86, 179);
       doc.rect(0, 0, 210, 28, 'F');
 
       doc.setTextColor(255, 255, 255);
@@ -628,7 +797,6 @@
       doc.setFontSize(16);
       doc.text('Relatório de Presença — Roni', 14, 18);
 
-      // Informações do Evento
       doc.setTextColor(33, 37, 41);
       doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
@@ -640,7 +808,6 @@
 
       doc.text(`Total de Presenças: ${totalConfirmados} | Atrasos: ${totalAtrasados}`, 14, 52);
 
-      // Dados para a tabela (ordenados por horário de chegada)
       const tableRows = [];
       const registrosOrdenados = [...evtAtual.registros].reverse();
 
@@ -655,7 +822,6 @@
         ]);
       });
 
-      // Gerar Tabela
       doc.autoTable({
         startY: 58,
         head: [['#', 'Nome', 'Setor', 'Tag RFID', 'Horário', 'Status']],
@@ -673,7 +839,6 @@
         styles: { fontSize: 9 }
       });
 
-      // Salvar o arquivo PDF
       const nomeArquivo = `Relatorio_Presenca_${evtAtual.nome.replace(/\s+/g, '_')}_${evtAtual.data.replace(/\//g, '-')}.pdf`;
       doc.save(nomeArquivo);
     }
