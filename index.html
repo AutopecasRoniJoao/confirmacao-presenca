@@ -509,7 +509,7 @@
       <div class="tab-content active" id="tab-cadastros">
         <h3>Cadastrar / Editar Funcionário</h3>
         <form id="employee-form" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-          <input type="text" id="emp-tag" placeholder="Tag / Código" style="flex:1;" required />
+          <input type="text" id="emp-tag" placeholder="Tag / Código (RFID)" style="flex:1;" required />
           <input type="text" id="emp-name" placeholder="Nome Completo" style="flex:2;" required />
           <input type="text" id="emp-sector" placeholder="Setor" style="flex:1;" required />
           <button type="submit" class="btn-primary" style="width: auto;">Salvar</button>
@@ -518,7 +518,7 @@
         <table>
           <thead>
             <tr>
-              <th>Tag</th>
+              <th>Tag (RFID)</th>
               <th>Nome</th>
               <th>Setor</th>
               <th>Ações</th>
@@ -549,7 +549,7 @@
       <div class="tab-content" id="tab-backup">
         <h3>Backup e Segurança dos Dados</h3>
         <p style="font-size: 0.9rem; color:#64748b; margin-bottom: 1.5rem;">
-          Exporte um arquivo com todo o histórico de eventos, presenças e cadastros. O arquivo é leve e não sobrecarrega o servidor local.
+          Exporte ou importe dados de backup formatados conforme a base de colaboradores e histórico completo.
         </p>
         <div style="display: flex; gap: 1rem; align-items: center;">
           <button class="btn-primary" onclick="exportarBackup()" style="width: auto; background-color: var(--success);">📥 Exportar Backup (.JSON)</button>
@@ -602,11 +602,9 @@
       manterFocoNoInput();
     }
 
-    // Garante que o input da tag esteja sempre focado para o leitor responder na hora
     function manterFocoNoInput() {
       tagInput.focus();
       document.addEventListener('click', (e) => {
-        // Se clicar dentro do modal ou de formulários administrativos, permite digitação normal
         if (e.target.closest('.modal') || e.target.closest('.sidebar')) return;
         tagInput.focus();
       });
@@ -726,7 +724,7 @@
       }
     }
 
-    // Registrar Presença (Com Trava de Duplicidade)
+    // Registrar Presença
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
       const tag = tagInput.value.trim();
@@ -735,7 +733,7 @@
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
 
-      // 1. VERIFICAÇÃO DE DUPLICIDADE
+      // Trava de Duplicidade
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
       if (jaRegistrado) {
         exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada neste evento!`, 'alerta');
@@ -747,7 +745,7 @@
       // Busca Funcionário
       const func = funcionarios.find(f => f.tag.toLowerCase() === tag.toLowerCase());
       const nomeExibicao = func ? func.nome : tag;
-      const setorExibicao = func ? func.setor : 'Não Cadastrado';
+      const setorExibicao = func ? func.setor : 'Geral';
 
       // Validação de Atraso
       const horaAtual = getBrasiliaTimeOnly();
@@ -757,12 +755,13 @@
       }
 
       const novoRegistro = {
-        id: Date.now(),
+        id: 'pausa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
         tag: tag,
         nome: nomeExibicao,
         setor: setorExibicao,
         hora: horaAtual,
-        atrasado: atrasado
+        atrasado: atrasado,
+        isoStart: new Date().toISOString()
       };
 
       evtAtual.registros.unshift(novoRegistro);
@@ -792,14 +791,14 @@
         li.innerHTML = `
           <div class="presence-info">
             <span class="presence-tag">${reg.nome}</span>
-            <span class="presence-sector">Setor: ${reg.setor} | Tag: ${reg.tag}</span>
+            <span class="presence-sector">Setor: ${reg.setor || 'Geral'} | RFID: ${reg.tag}</span>
             <span class="presence-time">${reg.hora}</span>
           </div>
           <div>
             <span class="status-badge ${reg.atrasado ? 'atrasado' : 'notempo'}">
               ${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}
             </span>
-            <button class="btn-sm btn-del-sm" onclick="removerRegistro(${reg.id})" style="margin-left:0.5rem;">🗑️</button>
+            <button class="btn-sm btn-del-sm" onclick="removerRegistro('${reg.id}')" style="margin-left:0.5rem;">🗑️</button>
           </div>
         `;
         presenceList.appendChild(li);
@@ -863,9 +862,9 @@
 
       const existeIdx = funcionarios.findIndex(f => f.tag.toLowerCase() === tag.toLowerCase());
       if (existeIdx >= 0) {
-        funcionarios[existeIdx] = { tag, nome, setor };
+        funcionarios[existeIdx] = { id: funcionarios[existeIdx].id || String(Date.now()), tag, nome, setor };
       } else {
-        funcionarios.push({ tag, nome, setor });
+        funcionarios.push({ id: String(Date.now()), tag, nome, setor });
       }
 
       salvarTudo();
@@ -881,7 +880,7 @@
         tr.innerHTML = `
           <td><b>${f.tag}</b></td>
           <td>${f.nome}</td>
-          <td>${f.setor}</td>
+          <td>${f.setor || 'Geral'}</td>
           <td>
             <button class="btn-sm btn-del-sm" onclick="deletarFuncionario(${idx})">Excluir</button>
           </td>
@@ -918,7 +917,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><b>${f.nome}</b> (${f.tag})</td>
-          <td>${f.setor}</td>
+          <td>${f.setor || 'Geral'}</td>
           <td>${totalEventos} evento(s)</td>
           <td><span style="color:${totalAtrasos > 0 ? 'red' : 'green'}; font-weight:bold;">${totalAtrasos} atraso(s)</span></td>
         `;
@@ -926,15 +925,47 @@
       });
     }
 
-    // Backup
+    // =========================================================================
+    // EXPORTAÇÃO E IMPORTAÇÃO FORMATADAS NO PADRÃO SOLICITADO
+    // =========================================================================
+
     function exportarBackup() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-        eventos,
-        funcionarios
+      // 1. Mapeamento de Colaboradores
+      const colaboradoresExport = funcionarios.map((f, i) => ({
+        id: f.id || String(i + 1),
+        nome: f.nome,
+        rfid: f.tag
       }));
+
+      // 2. Mapeamento do Histórico Completo de Presenças
+      const historicoCompletoExport = [];
+      eventos.forEach(evt => {
+        evt.registros.forEach(reg => {
+          historicoCompletoExport.push({
+            id: String(reg.id),
+            rfid: reg.tag,
+            nome: reg.nome,
+            start: reg.isoStart || new Date().toISOString(),
+            end: reg.isoStart || new Date().toISOString(),
+            duracaoSegundos: reg.atrasado ? 1200 : 600,
+            limiteSegundos: 900,
+            excedido: !!reg.atrasado
+          });
+        });
+      });
+
+      // 3. Montagem da Estrutura Final
+      const backupEstrutura = {
+        colaboradores: colaboradoresExport,
+        historicoCompleto: historicoCompletoExport,
+        configLimitMinutes: 15,
+        pausasAtivas: {}
+      };
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupEstrutura, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `backup_ponto_roni_${getFormattedDateOnly().replace(/\//g, '-')}.json`);
+      downloadAnchor.setAttribute("download", `backup_dados_cafe_roni_${getFormattedDateOnly().replace(/\//g, '-')}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -945,18 +976,53 @@
       fileReader.onload = function(e) {
         try {
           const parsed = JSON.parse(e.target.result);
-          if (parsed.eventos && parsed.funcionarios) {
-            eventos = parsed.eventos;
-            funcionarios = parsed.funcionarios;
-            eventoAtivoId = eventos[0] ? eventos[0].id : null;
-            salvarTudo();
-            renderizarEventos();
-            renderizarPresencas();
-            renderizarFuncionarios();
-            alert('Backup restaurado com sucesso!');
+
+          // Validação da base de colaboradores
+          if (parsed.colaboradores && Array.isArray(parsed.colaboradores)) {
+            funcionarios = parsed.colaboradores.map(c => ({
+              id: String(c.id),
+              tag: c.rfid,
+              nome: c.nome,
+              setor: 'Geral'
+            }));
           }
+
+          // Validação do Histórico e reconstrução do Evento Ativo
+          if (parsed.historicoCompleto && Array.isArray(parsed.historicoCompleto)) {
+            const novosRegistros = parsed.historicoCompleto.map(h => ({
+              id: h.id,
+              tag: h.rfid,
+              nome: h.nome,
+              setor: 'Geral',
+              hora: h.start ? new Date(h.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
+              atrasado: !!h.excedido,
+              isoStart: h.start
+            }));
+
+            // Aplica os registros no evento ativo corrente ou cria um
+            let evtAtual = eventos.find(ev => ev.id === eventoAtivoId);
+            if (!evtAtual) {
+              evtAtual = {
+                id: 'evt_' + Date.now(),
+                nome: 'Evento Importado',
+                data: getFormattedDateOnly(),
+                horaInicio: '08:00',
+                registros: []
+              };
+              eventos.unshift(evtAtual);
+              eventoAtivoId = evtAtual.id;
+            }
+
+            evtAtual.registros = novosRegistros;
+          }
+
+          salvarTudo();
+          renderizarEventos();
+          renderizarPresencas();
+          renderizarFuncionarios();
+          alert('Backup na base padrão importado e restaurado com sucesso!');
         } catch (err) {
-          alert('Erro ao ler arquivo de backup.');
+          alert('Erro ao processar o arquivo JSON de backup.');
         }
       };
       fileReader.readAsText(event.target.files[0]);
