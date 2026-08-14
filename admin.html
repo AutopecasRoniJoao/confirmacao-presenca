@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Painel Administrativo | Roni</title>
   
-  <!-- Ícone da Aba (Favicon) -->
   <link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
 
   <style>
@@ -123,11 +122,7 @@
     .tab-content { display: none; background: white; padding: 1.2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
     .tab-content.active { display: block; }
 
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-      margin-top: 1rem;
-    }
+    .table-responsive { width: 100%; overflow-x: auto; margin-top: 1rem; }
 
     table { width: 100%; border-collapse: collapse; min-width: 500px; }
     th, td { border: 1px solid var(--border); padding: 0.75rem 0.5rem; text-align: left; font-size: 0.88rem; }
@@ -146,7 +141,6 @@
       gap: 0.8rem;
     }
 
-    /* Estilos da Presença Manual */
     .manual-presence-box {
       background-color: #f8fafc;
       border: 1px solid #cbd5e1;
@@ -155,35 +149,26 @@
       margin-bottom: 1.5rem;
     }
 
-    .manual-presence-box h4 {
-      margin-bottom: 0.6rem;
-      color: var(--primary);
-      font-size: 1rem;
-    }
+    .manual-presence-box h4 { margin-bottom: 0.6rem; color: var(--primary); font-size: 1rem; }
 
     .manual-input-group {
       display: flex;
       gap: 0.5rem;
       flex-direction: column;
-      position: relative;
+    }
+
+    .info-tag-atribuida {
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+      color: #0369a1;
+      font-weight: bold;
     }
 
     @media (min-width: 600px) {
-      .event-selector-box {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-      }
-      .manual-input-group {
-        flex-direction: row;
-      }
-      .manual-input-group input {
-        margin-bottom: 0;
-      }
-      .manual-input-group button {
-        width: auto;
-        white-space: nowrap;
-      }
+      .event-selector-box { flex-direction: row; justify-content: space-between; align-items: center; }
+      .manual-input-group { flex-direction: row; }
+      .manual-input-group input { margin-bottom: 0; }
+      .manual-input-group button { width: auto; white-space: nowrap; }
     }
   </style>
 </head>
@@ -196,6 +181,7 @@
     </div>
   </header>
 
+  <!-- Solicita a senha 1 ÚNICA VEZ ao entrar -->
   <div class="login-container" id="login-screen">
     <div class="card-login">
       <h2 style="margin-bottom: 1.2rem;">Painel Administrativo</h2>
@@ -225,25 +211,27 @@
         <button class="btn-sm" onclick="criarNovoEvento()" style="background: var(--success); color: white; padding: 0.6rem;">+ Criar Evento</button>
       </div>
 
-      <!-- ✏️ Bloco de Presença Manual por Nome -->
+      <!-- ✏️ Bloco de Presença Manual Inteligente -->
       <div class="manual-presence-box">
-        <h4>✍️ Marcar Presença Manualmente</h4>
+        <h4>✍️ Marcar Presença por Nome</h4>
         <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.6rem;">
-          Digite o nome do funcionário para buscar e registrar a presença sem usar a tag:
+          Digite o nome do colaborador. A tag será atribuída automaticamente ao leitor:
         </p>
         <div class="manual-input-group">
           <input 
             type="text" 
             id="manual-search-name" 
             list="list-funcionarios" 
-            placeholder="Digite o nome ou setor..." 
+            placeholder="Digite para buscar o nome..." 
             autocomplete="off"
+            oninput="detectarTagAtribuida()"
           />
           <datalist id="list-funcionarios"></datalist>
           <button class="btn-primary" onclick="confirmarPresencaManual()" style="background-color: var(--success);">
             + Marcar Presença
           </button>
         </div>
+        <div class="info-tag-atribuida" id="info-tag"></div>
       </div>
 
       <h3>Presenças do Evento</h3>
@@ -252,7 +240,7 @@
           <thead>
             <tr>
               <th>Nome</th>
-              <th>Tag</th>
+              <th>Tag Atribuída</th>
               <th>Setor</th>
               <th>Horário</th>
               <th>Status</th>
@@ -310,10 +298,7 @@
     <!-- Tab Backup -->
     <div class="tab-content" id="tab-backup">
       <h3>Backup dos Dados</h3>
-      <p style="color:#64748b; margin-bottom: 1rem; font-size: 0.9rem;">
-        Exporte dados para não perder registros ao trocar de aparelho.
-      </p>
-      <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+      <div style="display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem;">
         <button class="btn-primary" onclick="exportarBackup()" style="background-color: var(--success);">📥 Exportar Backup (.JSON)</button>
         <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importarBackup(event)">
         <button class="btn-primary" onclick="document.getElementById('import-file').click()" style="background-color: #64748b;">📤 Restaurar Backup</button>
@@ -413,49 +398,53 @@
       renderizarTudo();
     }
 
-    // Atualiza as opções do Datalist para autocomplete
     function atualizarDatalistFuncionarios() {
       const datalist = document.getElementById('list-funcionarios');
       datalist.innerHTML = '';
       funcionarios.forEach(f => {
         const option = document.createElement('option');
-        option.value = `${f.nome} (${f.setor || 'Geral'})`;
+        option.value = f.nome;
         datalist.appendChild(option);
       });
     }
 
-    // 🎯 Lógica para dar presença manual por Nome
+    // 🔍 Detecta o nome digitado e mostra a tag correspondente
+    function detectarTagAtribuida() {
+      const val = document.getElementById('manual-search-name').value.trim();
+      const infoBox = document.getElementById('info-tag');
+      const func = funcionarios.find(f => f.nome.toLowerCase() === val.toLowerCase());
+
+      if (func) {
+        infoBox.textContent = `✓ Tag atribuída: ${func.tag} (${func.setor || 'Geral'})`;
+      } else {
+        infoBox.textContent = '';
+      }
+    }
+
+    // 🎯 Marca a presença atribuindo automaticamente a Tag cadastrada
     function confirmarPresencaManual() {
       carregarDados();
       const inputVal = document.getElementById('manual-search-name').value.trim();
       if (!inputVal) {
-        alert('Por favor, digite ou selecione um funcionário!');
+        alert('Por favor, selecione ou digite o nome de um funcionário!');
         return;
       }
 
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
-      if (!evtAtual) {
-        alert('Nenhum evento ativo selecionado!');
-        return;
-      }
+      if (!evtAtual) return;
 
-      // Procura o funcionário cadastrado que corresponde ao valor digitado
-      const func = funcionarios.find(f => 
-        inputVal.toLowerCase().includes(f.nome.toLowerCase()) || 
-        f.nome.toLowerCase() === inputVal.toLowerCase() ||
-        f.tag.toLowerCase() === inputVal.toLowerCase()
-      );
+      const func = funcionarios.find(f => f.nome.toLowerCase() === inputVal.toLowerCase());
 
       if (!func) {
-        alert('Funcionário não localizado no cadastro. Por favor, cadastre-o primeiro na aba "Funcionários".');
+        alert('Funcionário não cadastrado! Selecione um nome válido da lista.');
         return;
       }
 
-      // Verifica se a presença já foi registrada
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === func.tag.toLowerCase());
       if (jaRegistrado) {
-        alert(`⚠️ ATENÇÃO: A presença de "${func.nome}" já foi registrada neste evento!`);
+        alert(`⚠️ A presença de "${func.nome}" já foi registrada neste evento!`);
         document.getElementById('manual-search-name').value = '';
+        document.getElementById('info-tag').textContent = '';
         return;
       }
 
@@ -467,7 +456,7 @@
 
       const novoRegistro = {
         id: 'pausa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-        tag: func.tag,
+        tag: func.tag, // Tag vinculada automaticamente ao leitor
         nome: func.nome,
         setor: func.setor || 'Geral',
         hora: horaAtual,
@@ -479,8 +468,9 @@
       salvarTudo();
       renderizarPresencas();
 
-      alert(`✓ Presença registrada com sucesso para: ${func.nome}`);
+      alert(`✓ Presença confirmada! Tag [${func.tag}] atribuída para ${func.nome}`);
       document.getElementById('manual-search-name').value = '';
+      document.getElementById('info-tag').textContent = '';
     }
 
     function renderizarPresencas() {
@@ -497,7 +487,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><b>${reg.nome}</b></td>
-          <td>${reg.tag}</td>
+          <td><code>${reg.tag}</code></td>
           <td>${reg.setor || 'Geral'}</td>
           <td>${reg.hora}</td>
           <td>${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}</td>
@@ -541,7 +531,7 @@
       funcionarios.forEach((f, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><b>${f.tag}</b></td>
+          <td><code>${f.tag}</code></td>
           <td>${f.nome}</td>
           <td>${f.setor || 'Geral'}</td>
           <td><button class="btn-sm btn-del-sm" onclick="deletarFuncionario(${idx})">Excluir</button></td>
