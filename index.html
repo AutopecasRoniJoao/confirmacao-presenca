@@ -2,7 +2,8 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Viewport ajustada para impedir zoom automático incômodo no celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistema de Ponto — Leitor de Tags | Roni</title>
   
   <!-- Configurações PWA -->
@@ -13,13 +14,20 @@
   <style>
     :root {
       --primary: #0056b3;
-      --bg: #f8f9fa;
+      --primary-hover: #004085;
+      --bg: #f4f6f9;
       --card-bg: #ffffff;
       --text: #212529;
       --border: #e9ecef;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      -webkit-tap-highlight-color: transparent; /* Remove o brilho azul feio ao tocar no celular */
+    }
 
     body {
       background-color: var(--bg);
@@ -27,34 +35,44 @@
       display: flex;
       flex-direction: column;
       min-height: 100vh;
-      overflow-x: hidden;
     }
 
     header {
       background-color: var(--card-bg);
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      padding: 1rem 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
     }
 
-    header img { max-height: 70px; }
+    header img { max-height: 55px; width: auto; }
 
-    .header-actions { display: flex; gap: 0.5rem; }
+    .header-actions { 
+      display: flex; 
+      gap: 0.5rem; 
+      width: auto;
+    }
 
     .btn-header {
       background-color: transparent;
       color: var(--primary);
       border: 2px solid var(--primary);
-      padding: 0.4rem 0.8rem;
-      font-size: 0.85rem;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       transition: all 0.2s;
+      min-height: 44px; /* Tamanho mínimo para toque no celular */
     }
 
+    .btn-header:active { transform: scale(0.98); }
     .btn-header:hover { background-color: var(--primary); color: white; }
     .btn-admin { background-color: var(--primary); color: white; }
 
@@ -63,39 +81,47 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
-      gap: 2rem;
+      padding: 1.5rem 1rem;
+      gap: 1.5rem;
+      max-width: 800px;
+      margin: 0 auto;
+      width: 100%;
     }
 
     .event-banner {
       background-color: #e0f2fe;
       color: #0369a1;
-      padding: 0.6rem 1rem;
-      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
       font-weight: 700;
-      font-size: 1rem;
-      margin-bottom: 1rem;
+      font-size: 0.95rem;
       border: 1px solid #bae6fd;
+      text-align: center;
+      width: 100%;
     }
 
     .card {
       background-color: var(--card-bg);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      max-width: 600px;
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
       width: 100%;
       text-align: center;
     }
 
+    .card h2 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+    .card p { font-size: 0.9rem; color: #64748b; margin-bottom: 1.2rem; }
+
     input[type="text"], input[type="password"] {
       width: 100%;
-      padding: 0.8rem 1rem;
-      font-size: 1rem;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
+      padding: 1rem;
+      font-size: 1.1rem; /* Tamanho 16px+ evita auto-zoom no iOS */
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
       outline: none;
       margin-bottom: 1rem;
+      text-align: center;
+      transition: border-color 0.2s;
     }
 
     input:focus { border-color: var(--primary); }
@@ -105,31 +131,34 @@
       background-color: var(--primary);
       color: white;
       border: none;
-      padding: 0.8rem;
+      padding: 0.9rem;
       font-size: 1rem;
-      font-weight: 600;
-      border-radius: 8px;
+      font-weight: 700;
+      border-radius: 10px;
       cursor: pointer;
+      min-height: 48px;
     }
+
+    .btn-primary:active { background-color: var(--primary-hover); }
 
     #status-msg {
       margin-top: 1.2rem;
-      padding: 0.8rem;
-      border-radius: 6px;
+      padding: 1rem;
+      border-radius: 10px;
       font-weight: 600;
+      font-size: 0.95rem;
       display: none;
     }
 
-    #status-msg.sucesso { display: block; background-color: #d4edda; color: #155724; }
-    #status-msg.erro { display: block; background-color: #f8d7da; color: #721c24; }
-    #status-msg.alerta { display: block; background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    #status-msg.sucesso { display: block; background-color: #d1fae5; color: #065f46; }
+    #status-msg.erro { display: block; background-color: #fee2e2; color: #991b1b; }
+    #status-msg.alerta { display: block; background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
     .presence-container {
       background-color: var(--card-bg);
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      max-width: 600px;
+      padding: 1.25rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
       width: 100%;
     }
 
@@ -138,39 +167,42 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
+      padding-bottom: 0.75rem;
       border-bottom: 2px solid var(--border);
     }
+
+    .presence-header h3 { font-size: 1.1rem; }
 
     .badge {
       background-color: var(--primary);
       color: white;
-      padding: 0.2rem 0.6rem;
-      border-radius: 12px;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
       font-size: 0.85rem;
       font-weight: bold;
     }
 
-    .presence-list { list-style: none; max-height: 350px; overflow-y: auto; }
+    .presence-list { list-style: none; max-height: 380px; overflow-y: auto; }
 
     .presence-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 0.5rem;
+      padding: 0.85rem 0.25rem;
       border-bottom: 1px solid var(--border);
     }
 
-    .presence-info { display: flex; flex-direction: column; }
-    .presence-tag { font-weight: 600; color: var(--primary); }
-    .presence-sector { font-size: 0.8rem; color: #475569; }
-    .presence-time { font-size: 0.75rem; color: #6c757d; }
+    .presence-info { display: flex; flex-direction: column; gap: 0.2rem; }
+    .presence-tag { font-weight: 700; color: var(--primary); font-size: 1rem; }
+    .presence-sector { font-size: 0.82rem; color: #64748b; }
+    .presence-time { font-size: 0.78rem; color: #94a3b8; }
 
     .status-badge {
       font-size: 0.75rem;
       font-weight: 700;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      white-space: nowrap;
     }
 
     .status-badge.atrasado { background-color: #fef3c7; color: #b45309; }
@@ -179,31 +211,73 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.6);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
+      padding: 1rem;
     }
 
     .modal-card {
       background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 350px;
-      width: 90%;
+      padding: 1.8rem;
+      border-radius: 16px;
+      max-width: 400px;
+      width: 100%;
       text-align: center;
       position: relative;
     }
 
     .modal-close {
       position: absolute;
-      top: 10px; right: 15px;
+      top: 12px; right: 15px;
       background: none; border: none;
-      font-size: 1.2rem; cursor: pointer; color: #666;
+      font-size: 1.5rem; cursor: pointer; color: #94a3b8;
+      padding: 0.5rem;
     }
 
-    footer { text-align: center; padding: 1rem; font-size: 0.85rem; color: #6c757d; }
+    footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
+
+    /* 📱 ADAPTAÇÕES ESPECÍFICAS PARA TELA DE CELULAR (Abaixo de 600px) */
+    @media (max-width: 600px) {
+      header {
+        justify-content: center;
+        text-align: center;
+        padding: 0.8rem 1rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .btn-header {
+        flex: 1;
+        font-size: 0.85rem;
+        padding: 0.5rem;
+      }
+
+      main {
+        padding: 1rem 0.75rem;
+      }
+
+      .card {
+        padding: 1.25rem 1rem;
+      }
+
+      .card h2 { font-size: 1.2rem; }
+
+      .presence-item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .presence-item > div:last-child {
+        align-self: flex-end;
+      }
+    }
   </style>
 </head>
 <body>
@@ -233,6 +307,7 @@
           autofocus 
           required 
           autocomplete="off"
+          enterkeyhint="done"
         />
         <button type="submit" class="btn-primary">Confirmar Presença</button>
       </form>
@@ -255,7 +330,7 @@
   <div class="modal-overlay" id="modal-login">
     <div class="modal-card">
       <button class="modal-close" onclick="fecharModalAdmin()">&times;</button>
-      <h3 style="margin-bottom: 1rem;">Acesso Administrativo</h3>
+      <h3 style="margin-bottom: 1.2rem;">Acesso Administrativo</h3>
       <form id="modal-login-form">
         <input type="text" id="modal-user" placeholder="Usuário" required />
         <input type="password" id="modal-pass" placeholder="Senha" required />
@@ -498,12 +573,12 @@
       }
     };
 
-    // Registro do Service Worker (PWA)
+    // Registro PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker registrado com sucesso!'))
-          .catch(err => console.log('Falha ao registrar Service Worker:', err));
+          .then(reg => console.log('Service Worker ativo!'))
+          .catch(err => console.log('Erro no Service Worker:', err));
       });
     }
   </script>
