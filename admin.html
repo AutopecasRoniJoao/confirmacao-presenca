@@ -124,12 +124,16 @@
 
     .table-responsive { width: 100%; overflow-x: auto; margin-top: 1rem; }
 
-    table { width: 100%; border-collapse: collapse; min-width: 500px; }
+    table { width: 100%; border-collapse: collapse; min-width: 550px; }
     th, td { border: 1px solid var(--border); padding: 0.75rem 0.5rem; text-align: left; font-size: 0.88rem; }
     th { background-color: #f1f5f9; }
 
     .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; border: none; cursor: pointer; }
     .btn-del-sm { background-color: #fee2e2; color: #991b1b; }
+    .btn-toggle-sm { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-weight: 600; }
+    .btn-toggle-sm:hover { background-color: #bae6fd; }
+
+    .actions-cell { display: flex; gap: 0.4rem; flex-wrap: wrap; }
 
     .event-selector-box {
       background-color: #e0f2fe;
@@ -151,18 +155,9 @@
 
     .manual-presence-box h4 { margin-bottom: 0.6rem; color: var(--primary); font-size: 1rem; }
 
-    .manual-input-group {
-      display: flex;
-      gap: 0.5rem;
-      flex-direction: column;
-    }
+    .manual-input-group { display: flex; gap: 0.5rem; flex-direction: column; }
 
-    .info-tag-atribuida {
-      margin-top: 0.4rem;
-      font-size: 0.85rem;
-      color: #0369a1;
-      font-weight: bold;
-    }
+    .info-tag-atribuida { margin-top: 0.4rem; font-size: 0.85rem; color: #0369a1; font-weight: bold; }
 
     @media (min-width: 600px) {
       .event-selector-box { flex-direction: row; justify-content: space-between; align-items: center; }
@@ -181,7 +176,6 @@
     </div>
   </header>
 
-  <!-- Solicita a senha 1 ÚNICA VEZ ao entrar -->
   <div class="login-container" id="login-screen">
     <div class="card-login">
       <h2 style="margin-bottom: 1.2rem;">Painel Administrativo</h2>
@@ -211,7 +205,7 @@
         <button class="btn-sm" onclick="criarNovoEvento()" style="background: var(--success); color: white; padding: 0.6rem;">+ Criar Evento</button>
       </div>
 
-      <!-- ✏️ Bloco de Presença Manual Inteligente -->
+      <!-- Bloco de Presença Manual por Nome -->
       <div class="manual-presence-box">
         <h4>✍️ Marcar Presença por Nome</h4>
         <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.6rem;">
@@ -244,7 +238,7 @@
               <th>Setor</th>
               <th>Horário</th>
               <th>Status</th>
-              <th>Ação</th>
+              <th>Ações</th>
             </tr>
           </thead>
           <tbody id="presencas-table"></tbody>
@@ -408,7 +402,6 @@
       });
     }
 
-    // 🔍 Detecta o nome digitado e mostra a tag correspondente
     function detectarTagAtribuida() {
       const val = document.getElementById('manual-search-name').value.trim();
       const infoBox = document.getElementById('info-tag');
@@ -421,7 +414,6 @@
       }
     }
 
-    // 🎯 Marca a presença atribuindo automaticamente a Tag cadastrada
     function confirmarPresencaManual() {
       carregarDados();
       const inputVal = document.getElementById('manual-search-name').value.trim();
@@ -456,7 +448,7 @@
 
       const novoRegistro = {
         id: 'pausa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-        tag: func.tag, // Tag vinculada automaticamente ao leitor
+        tag: func.tag,
         nome: func.nome,
         setor: func.setor || 'Geral',
         hora: horaAtual,
@@ -490,11 +482,31 @@
           <td><code>${reg.tag}</code></td>
           <td>${reg.setor || 'Geral'}</td>
           <td>${reg.hora}</td>
-          <td>${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}</td>
-          <td><button class="btn-sm btn-del-sm" onclick="removerRegistro('${reg.id}')">Excluir</button></td>
+          <td>${reg.atrasado ? '<span style="color:#b45309; font-weight:bold;">⚠️ Atrasado</span>' : '<span style="color:#047857; font-weight:bold;">✓ No tempo</span>'}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-sm btn-toggle-sm" onclick="alternarAtraso('${reg.id}')">
+                ${reg.atrasado ? '🔄 Marcar "No tempo"' : '🔄 Marcar "Atrasado"'}
+              </button>
+              <button class="btn-sm btn-del-sm" onclick="removerRegistro('${reg.id}')">Excluir</button>
+            </div>
+          </td>
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    // 🔄 Alterna/remove o status de atrasado
+    function alternarAtraso(regId) {
+      const evtAtual = eventos.find(e => e.id === eventoAtivoId);
+      if (!evtAtual) return;
+
+      const reg = evtAtual.registros.find(r => String(r.id) === String(regId));
+      if (reg) {
+        reg.atrasado = !reg.atrasado; // Inverte true para false ou vice-versa
+        salvarTudo();
+        renderizarPresencas();
+      }
     }
 
     function removerRegistro(regId) {
