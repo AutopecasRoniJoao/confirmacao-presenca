@@ -17,6 +17,7 @@
       --card-bg: #ffffff;
       --text: #212529;
       --border: #e9ecef;
+      --success: #28a745;
     }
 
     * { 
@@ -134,6 +135,51 @@
       min-height: 48px;
     }
 
+    .divider {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.85rem;
+      font-weight: bold;
+      margin: 1.5rem 0;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #cbd5e1;
+    }
+
+    .divider span {
+      padding: 0 0.8rem;
+    }
+
+    .manual-box {
+      background-color: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      padding: 1rem;
+      border-radius: 12px;
+      text-align: left;
+    }
+
+    .manual-box label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #334155;
+    }
+
+    .info-tag-atribuida {
+      margin-top: 0.2rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.85rem;
+      color: #0369a1;
+      font-weight: bold;
+      text-align: center;
+    }
+
     #status-msg {
       margin-top: 1.2rem;
       padding: 1rem;
@@ -218,7 +264,6 @@
     <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
     <div class="header-actions">
       <button class="btn-header" onclick="toggleFullScreen()">⛶ Tela Cheia</button>
-      <!-- 🟢 REDIRECIONA DIRETO PARA ADMIN (Solicita senha 1 vez lá) -->
       <a href="admin.html" class="btn-header btn-admin">🔐 Admin</a>
     </div>
   </header>
@@ -229,9 +274,10 @@
         <div class="event-banner" id="event-banner-text">Evento: --</div>
       </div>
 
-      <h2>Aproxime a sua Tag</h2>
-      <p>O leitor registrará automaticamente sem a necessidade de clicar na tela.</p>
+      <h2 style="margin-top: 0.8rem;">Aproxime a sua Tag</h2>
+      <p>O leitor registrará automaticamente ao aproximar o cartão/chaveiro.</p>
 
+      <!-- 📡 Entrada por Leitor RFID -->
       <form id="presence-form">
         <input 
           type="text" 
@@ -241,8 +287,33 @@
           required 
           autocomplete="off"
         />
-        <button type="submit" class="btn-primary">Confirmar Presença</button>
+        <button type="submit" class="btn-primary">Confirmar Presença (Tag)</button>
       </form>
+
+      <div class="divider"><span>OU</span></div>
+
+      <!-- ✍️ Entrada Manual por Busca de Nome -->
+      <div class="manual-box">
+        <label for="manual-search-name">✍️ Marcar Presença por Nome:</label>
+        <form id="manual-presence-form" onsubmit="confirmarPresencaManual(event)">
+          <input 
+            type="text" 
+            id="manual-search-name" 
+            list="list-funcionarios" 
+            placeholder="Digite para buscar o nome..." 
+            autocomplete="off"
+            oninput="detectarTagAtribuida()"
+            style="margin-bottom: 0.4rem; text-align: left;"
+          />
+          <datalist id="list-funcionarios"></datalist>
+          
+          <div class="info-tag-atribuida" id="info-tag"></div>
+          
+          <button type="submit" class="btn-primary" style="background-color: var(--success);">
+            Confirmar Presença por Nome
+          </button>
+        </form>
+      </div>
 
       <div id="status-msg"></div>
     </div>
@@ -309,11 +380,12 @@
     function init() {
       carregarDados();
       renderizarPresencas();
-      manterFocoNoInput();
+      atualizarDatalistFuncionarios();
 
       window.addEventListener('storage', () => {
         carregarDados();
         renderizarPresencas();
+        atualizarDatalistFuncionarios();
       });
     }
 
@@ -344,11 +416,6 @@
       }
     }
 
-    function manterFocoNoInput() {
-      tagInput.focus();
-      document.addEventListener('click', () => tagInput.focus());
-    }
-
     function salvarTudo() {
       localStorage.setItem('eventos_roni', JSON.stringify(eventos));
       localStorage.setItem('funcionarios_roni', JSON.stringify(funcionarios));
@@ -359,24 +426,73 @@
       return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
     }
 
+    function atualizarDatalistFuncionarios() {
+      const datalist = document.getElementById('list-funcionarios');
+      datalist.innerHTML = '';
+      funcionarios.forEach(f => {
+        const option = document.createElement('option');
+        option.value = f.nome;
+        datalist.appendChild(option);
+      });
+    }
+
+    // 🔍 Exibe feedback visual da tag atribuída ao digitar o nome
+    function detectarTagAtribuida() {
+      const val = document.getElementById('manual-search-name').value.trim();
+      const infoBox = document.getElementById('info-tag');
+      const func = funcionarios.find(f => f.nome.toLowerCase() === val.toLowerCase());
+
+      if (func) {
+        infoBox.textContent = `✓ Tag vinculada: ${func.tag} (${func.setor || 'Geral'})`;
+      } else {
+        infoBox.textContent = '';
+      }
+    }
+
+    // 🎯 Registrar por Leitor RFID
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
       carregarDados();
       const tag = tagInput.value.trim();
       if (!tag) return;
 
+      processarPresenca(tag, null);
+      tagInput.value = '';
+    };
+
+    // ✍️ Registrar por Seleção de Nome
+    function confirmarPresencaManual(e) {
+      e.preventDefault();
+      carregarDados();
+      const inputVal = document.getElementById('manual-search-name').value.trim();
+      if (!inputVal) return;
+
+      const func = funcionarios.find(f => f.nome.toLowerCase() === inputVal.toLowerCase());
+
+      if (!func) {
+        tocarSom('erro');
+        exibirMensagem('⚠️ Colaborador não encontrado! Selecione um nome da lista.', 'erro');
+        return;
+      }
+
+      processarPresenca(func.tag, func);
+      document.getElementById('manual-search-name').value = '';
+      document.getElementById('info-tag').textContent = '';
+    }
+
+    // ⚙️ Função centralizada de registro de presença
+    function processarPresenca(tag, funcObj) {
       const evtAtual = eventos.find(e => e.id === eventoAtivoId);
       if (!evtAtual) return;
 
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
       if (jaRegistrado) {
         tocarSom('alerta');
-        exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada!`, 'alerta');
-        tagInput.value = '';
+        exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já foi registrada!`, 'alerta');
         return;
       }
 
-      const func = funcionarios.find(f => f.tag.toLowerCase() === tag.toLowerCase());
+      const func = funcObj || funcionarios.find(f => f.tag.toLowerCase() === tag.toLowerCase());
       const nomeExibicao = func ? func.nome : tag;
       const setorExibicao = func ? func.setor : 'Geral';
 
@@ -407,9 +523,7 @@
         tocarSom('sucesso');
         exibirMensagem(`✓ Presença confirmada: ${nomeExibicao}`, 'sucesso');
       }
-
-      tagInput.value = '';
-    };
+    }
 
     function renderizarPresencas() {
       presenceList.innerHTML = '';
