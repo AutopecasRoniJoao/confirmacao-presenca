@@ -3,18 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Ponto e Eventos | Roni</title>
+  <title>Sistema de Ponto — Leitor de Tags | Roni</title>
   <style>
     :root {
       --primary: #0056b3;
       --bg: #f8f9fa;
       --card-bg: #ffffff;
       --text: #212529;
-      --success: #28a745;
-      --error: #dc3545;
-      --warning: #ffc107;
       --border: #e9ecef;
-      --sidebar-bg: #1e293b;
     }
 
     * {
@@ -42,30 +38,7 @@
       align-items: center;
     }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .menu-btn {
-      background: none;
-      border: none;
-      font-size: 1.8rem;
-      cursor: pointer;
-      color: var(--primary);
-      padding: 0.2rem 0.5rem;
-      border-radius: 6px;
-    }
-
-    .menu-btn:hover { background-color: var(--border); }
-
     header img { max-height: 70px; }
-
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
 
     .btn-header {
       background-color: transparent;
@@ -84,128 +57,6 @@
       color: white;
     }
 
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: -320px;
-      width: 320px;
-      height: 100%;
-      background-color: var(--sidebar-bg);
-      color: white;
-      box-shadow: 4px 0 12px rgba(0,0,0,0.2);
-      transition: left 0.3s ease;
-      z-index: 1000;
-      display: flex;
-      flex-direction: column;
-      padding: 1.5rem;
-    }
-
-    .sidebar.open { left: 0; }
-
-    .sidebar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #334155;
-      padding-bottom: 1rem;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    .btn-create-event {
-      background-color: var(--success);
-      color: white;
-      border: none;
-      padding: 0.7rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 1rem;
-      width: 100%;
-    }
-
-    .btn-admin-access {
-      background-color: #6366f1;
-      color: white;
-      border: none;
-      padding: 0.7rem;
-      border-radius: 6px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-bottom: 1.5rem;
-      width: 100%;
-    }
-
-    .events-list-title {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #94a3b8;
-      margin-bottom: 0.8rem;
-    }
-
-    .events-list {
-      list-style: none;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .event-item {
-      background-color: #334155;
-      border-radius: 8px;
-      padding: 0.8rem;
-      margin-bottom: 0.8rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      border: 2px solid transparent;
-    }
-
-    .event-item.active {
-      border-color: #38bdf8;
-      background-color: #1e293b;
-    }
-
-    .event-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .event-name { font-weight: 600; font-size: 0.95rem; }
-    .event-date { font-size: 0.75rem; color: #94a3b8; }
-
-    .event-actions { display: flex; gap: 0.3rem; }
-
-    .event-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 0.9rem;
-      padding: 0.2rem;
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.4);
-      display: none;
-      z-index: 999;
-    }
-
-    .overlay.open { display: block; }
-
-    /* Main Content */
     main {
       flex: 1;
       display: flex;
@@ -236,7 +87,7 @@
       text-align: center;
     }
 
-    input[type="text"], input[type="password"] {
+    input[type="text"] {
       width: 100%;
       padding: 0.8rem 1rem;
       font-size: 1rem;
@@ -272,7 +123,6 @@
     #status-msg.erro { display: block; background-color: #f8d7da; color: #721c24; }
     #status-msg.alerta { display: block; background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
-    /* Presence List */
     .presence-container {
       background-color: var(--card-bg);
       padding: 1.5rem;
@@ -320,93 +170,10 @@
       font-weight: 700;
       padding: 0.2rem 0.5rem;
       border-radius: 4px;
-      margin-left: 0.5rem;
     }
 
     .status-badge.atrasado { background-color: #fef3c7; color: #b45309; }
     .status-badge.notempo { background-color: #d1fae5; color: #047857; }
-
-    /* Modals (Admin e Configs) */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.6);
-      z-index: 2000;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
-
-    .modal.open { display: flex; }
-
-    .modal-content {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      max-width: 800px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      position: relative;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 1rem; right: 1rem;
-      background: none; border: none;
-      font-size: 1.5rem; cursor: pointer;
-    }
-
-    .admin-tabs {
-      display: flex;
-      gap: 1rem;
-      border-bottom: 2px solid var(--border);
-      margin-bottom: 1.5rem;
-    }
-
-    .tab-btn {
-      padding: 0.5rem 1rem;
-      border: none;
-      background: none;
-      cursor: pointer;
-      font-weight: 600;
-      color: #64748b;
-    }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom: 3px solid var(--primary);
-    }
-
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th, td {
-      border: 1px solid var(--border);
-      padding: 0.6rem;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-
-    th { background-color: #f1f5f9; }
-
-    .btn-sm {
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .btn-del-sm { background-color: #f8d7da; color: #721c24; }
 
     footer {
       text-align: center;
@@ -418,30 +185,9 @@
 </head>
 <body>
 
-  <!-- Menu Lateral -->
-  <div class="sidebar" id="sidebar">
-    <div class="sidebar-header">
-      <h2>Painel de Controle</h2>
-      <button class="close-btn" id="close-sidebar">&times;</button>
-    </div>
-    <button class="btn-create-event" id="btn-new-event">+ Criar Novo Evento</button>
-    <button class="btn-admin-access" id="btn-open-admin">🔐 Área Administrativa</button>
-
-    <div class="events-list-title">Meus Eventos</div>
-    <ul class="events-list" id="events-list"></ul>
-  </div>
-
-  <div class="overlay" id="overlay"></div>
-
   <header>
-    <div class="header-left">
-      <button class="menu-btn" id="open-sidebar" title="Menu">☰</button>
-      <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
-    </div>
-    <div class="header-actions">
-      <button class="btn-header" id="btn-header-admin">🔐 Admin</button>
-      <button class="btn-header" onclick="toggleFullScreen()">⛶ Tela Cheia</button>
-    </div>
+    <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
+    <button class="btn-header" onclick="toggleFullScreen()">⛶ Tela Cheia</button>
   </header>
 
   <main>
@@ -475,117 +221,48 @@
       </div>
 
       <ul class="presence-list" id="presence-list">
-        <li style="text-align:center; color:#6c757d; padding:1rem;" id="empty-msg">Nenhum registro até o momento.</li>
+        <li style="text-align:center; color:#6c757d; padding:1rem;">Nenhum registro até o momento.</li>
       </ul>
     </div>
   </main>
-
-  <!-- Modal Login Admin -->
-  <div class="modal" id="modal-login">
-    <div class="modal-content" style="max-width: 400px;">
-      <button class="modal-close" onclick="fecharModal('modal-login')">&times;</button>
-      <h2 style="margin-bottom: 1rem;">Login Administrativo</h2>
-      <form id="login-form">
-        <input type="text" id="admin-user" placeholder="Usuário" required />
-        <input type="password" id="admin-pass" placeholder="Senha" required />
-        <button type="submit" class="btn-primary">Entrar</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal Painel Admin -->
-  <div class="modal" id="modal-admin">
-    <div class="modal-content">
-      <button class="modal-close" onclick="fecharModal('modal-admin')">&times;</button>
-      <h2>Painel Administrativo</h2>
-
-      <div class="admin-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-cadastros')">Funcionários / Tags</button>
-        <button class="tab-btn" onclick="switchTab('tab-relatorios')">Relatório de Presença</button>
-        <button class="tab-btn" onclick="switchTab('tab-backup')">Backup & Exportação</button>
-      </div>
-
-      <!-- Tab Cadastros -->
-      <div class="tab-content active" id="tab-cadastros">
-        <h3>Cadastrar / Editar Funcionário</h3>
-        <form id="employee-form" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;">
-          <input type="text" id="emp-tag" placeholder="Tag / Código (RFID)" style="flex:1;" required />
-          <input type="text" id="emp-name" placeholder="Nome Completo" style="flex:2;" required />
-          <input type="text" id="emp-sector" placeholder="Setor" style="flex:1;" required />
-          <button type="submit" class="btn-primary" style="width: auto;">Salvar</button>
-        </form>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Tag (RFID)</th>
-              <th>Nome</th>
-              <th>Setor</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="employees-table"></tbody>
-        </table>
-      </div>
-
-      <!-- Tab Relatórios -->
-      <div class="tab-content" id="tab-relatorios">
-        <h3>Relatório de Participação dos Funcionários</h3>
-        <p style="font-size: 0.85rem; color:#64748b;">Acompanhamento total de presenças e atrasos em eventos.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Setor</th>
-              <th>Total de Eventos Participados</th>
-              <th>Atrasos Registrados</th>
-            </tr>
-          </thead>
-          <tbody id="reports-table"></tbody>
-        </table>
-      </div>
-
-      <!-- Tab Backup -->
-      <div class="tab-content" id="tab-backup">
-        <h3>Backup e Segurança dos Dados</h3>
-        <p style="font-size: 0.9rem; color:#64748b; margin-bottom: 1.5rem;">
-          Exporte ou importe dados de backup formatados conforme a base de colaboradores e histórico completo.
-        </p>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-          <button class="btn-primary" onclick="exportarBackup()" style="width: auto; background-color: var(--success);">📥 Exportar Backup (.JSON)</button>
-          <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importarBackup(event)">
-          <button class="btn-primary" onclick="document.getElementById('import-file').click()" style="width: auto; background-color: #64748b;">📤 Restaurar Backup</button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <footer>
     &copy; Confirmação de Presença — Roni
   </footer>
 
   <script>
-    // Estado do Sistema
-    let eventos = JSON.parse(localStorage.getItem('eventos_roni')) || [];
-    let funcionarios = JSON.parse(localStorage.getItem('funcionarios_roni')) || [];
-    let eventoAtivoId = localStorage.getItem('evento_ativo_roni') || null;
+    let eventos = [];
+    let funcionarios = [];
+    let eventoAtivoId = null;
 
-    // DOM Elements
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('overlay');
     const presenceList = document.getElementById('presence-list');
     const counter = document.getElementById('counter');
     const statusMsg = document.getElementById('status-msg');
     const tagInput = document.getElementById('tag-input');
 
-    // Inicialização
     init();
 
     function init() {
+      carregarDados();
+      renderizarPresencas();
+      manterFocoNoInput();
+
+      // Atualiza automaticamente caso o admin altere eventos em outra aba
+      window.addEventListener('storage', () => {
+        carregarDados();
+        renderizarPresencas();
+      });
+    }
+
+    function carregarDados() {
+      eventos = JSON.parse(localStorage.getItem('eventos_roni')) || [];
+      funcionarios = JSON.parse(localStorage.getItem('funcionarios_roni')) || [];
+      eventoAtivoId = localStorage.getItem('evento_ativo_roni') || null;
+
       if (eventos.length === 0) {
         const evtInicial = {
           id: 'evt_' + Date.now(),
-          nome: 'Palestra 1',
+          nome: 'Evento Principal',
           data: getFormattedDateOnly(),
           horaInicio: '08:00',
           registros: []
@@ -597,17 +274,16 @@
         eventoAtivoId = eventos[0].id;
       }
 
-      renderizarEventos();
-      renderizarPresencas();
-      manterFocoNoInput();
+      const atual = eventos.find(e => e.id === eventoAtivoId);
+      if (atual) {
+        document.getElementById('active-event-container').style.display = 'block';
+        document.getElementById('event-banner-text').textContent = `Evento: ${atual.nome} (${atual.data} às ${atual.horaInicio || '00:00'})`;
+      }
     }
 
     function manterFocoNoInput() {
       tagInput.focus();
-      document.addEventListener('click', (e) => {
-        if (e.target.closest('.modal') || e.target.closest('.sidebar')) return;
-        tagInput.focus();
-      });
+      document.addEventListener('click', () => tagInput.focus());
     }
 
     function salvarTudo() {
@@ -624,109 +300,9 @@
       return new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' });
     }
 
-    // Controls Menu
-    document.getElementById('open-sidebar').onclick = () => { sidebar.classList.add('open'); overlay.classList.add('open'); };
-    document.getElementById('close-sidebar').onclick = fecharMenu;
-    overlay.onclick = fecharMenu;
-
-    function fecharMenu() { 
-      sidebar.classList.remove('open'); 
-      overlay.classList.remove('open'); 
-      setTimeout(() => tagInput.focus(), 100);
-    }
-
-    // Eventos
-    document.getElementById('btn-new-event').onclick = () => {
-      const nome = prompt('Nome do Evento:');
-      if (!nome) return;
-      const data = prompt('Data do Evento (DD/MM/AAAA):', getFormattedDateOnly());
-      const horaInicio = prompt('Horário de Início (HH:MM - ex: 08:30):', '08:00');
-
-      const novo = {
-        id: 'evt_' + Date.now(),
-        nome: nome.trim(),
-        data: data ? data.trim() : getFormattedDateOnly(),
-        horaInicio: horaInicio ? horaInicio.trim() : '00:00',
-        registros: []
-      };
-
-      eventos.unshift(novo);
-      eventoAtivoId = novo.id;
-      salvarTudo();
-      renderizarEventos();
-      renderizarPresencas();
-      fecharMenu();
-    };
-
-    function renderizarEventos() {
-      const list = document.getElementById('events-list');
-      list.innerHTML = '';
-
-      eventos.forEach(evt => {
-        const li = document.createElement('li');
-        li.className = `event-item ${evt.id === eventoAtivoId ? 'active' : ''}`;
-        li.innerHTML = `
-          <div class="event-info">
-            <span class="event-name">${evt.nome}</span>
-            <span class="event-date">📅 ${evt.data} às ${evt.horaInicio || '00:00'}</span>
-          </div>
-          <div class="event-actions">
-            <button class="event-btn" onclick="editarEvento(event, '${evt.id}')">✏️</button>
-            <button class="event-btn" onclick="excluirEvento(event, '${evt.id}')">🗑️</button>
-          </div>
-        `;
-        li.onclick = (e) => {
-          if (e.target.classList.contains('event-btn')) return;
-          eventoAtivoId = evt.id;
-          salvarTudo();
-          renderizarEventos();
-          renderizarPresencas();
-          fecharMenu();
-        };
-        list.appendChild(li);
-      });
-
-      const atual = eventos.find(e => e.id === eventoAtivoId);
-      if (atual) {
-        document.getElementById('active-event-container').style.display = 'block';
-        document.getElementById('event-banner-text').textContent = `Evento: ${atual.nome} (${atual.data} às ${atual.horaInicio || '00:00'})`;
-      }
-    }
-
-    function editarEvento(e, id) {
-      e.stopPropagation();
-      const evt = eventos.find(item => item.id === id);
-      if (!evt) return;
-
-      const novoNome = prompt('Editar nome:', evt.nome);
-      if (!novoNome) return;
-      const novaData = prompt('Editar data:', evt.data);
-      const novaHora = prompt('Editar hora de início (HH:MM):', evt.horaInicio || '08:00');
-
-      evt.nome = novoNome.trim();
-      evt.data = novaData ? novaData.trim() : evt.data;
-      evt.horaInicio = novaHora ? novaHora.trim() : evt.horaInicio;
-
-      salvarTudo();
-      renderizarEventos();
-      renderizarPresencas();
-    }
-
-    function excluirEvento(e, id) {
-      e.stopPropagation();
-      if (eventos.length <= 1) return alert('Você deve ter pelo menos 1 evento.');
-      if (confirm('Deseja excluir este evento e seus registros?')) {
-        eventos = eventos.filter(item => item.id !== id);
-        if (eventoAtivoId === id) eventoAtivoId = eventos[0].id;
-        salvarTudo();
-        renderizarEventos();
-        renderizarPresencas();
-      }
-    }
-
-    // Registrar Presença
     document.getElementById('presence-form').onsubmit = (e) => {
       e.preventDefault();
+      carregarDados(); // Recarrega antes de salvar para evitar sobresscrever dados do admin
       const tag = tagInput.value.trim();
       if (!tag) return;
 
@@ -742,12 +318,10 @@
         return;
       }
 
-      // Busca Funcionário
       const func = funcionarios.find(f => f.tag.toLowerCase() === tag.toLowerCase());
       const nomeExibicao = func ? func.nome : tag;
       const setorExibicao = func ? func.setor : 'Geral';
 
-      // Validação de Atraso
       const horaAtual = getBrasiliaTimeOnly();
       let atrasado = false;
       if (evtAtual.horaInicio) {
@@ -798,237 +372,10 @@
             <span class="status-badge ${reg.atrasado ? 'atrasado' : 'notempo'}">
               ${reg.atrasado ? '⚠️ Atrasado' : '✓ No tempo'}
             </span>
-            <button class="btn-sm btn-del-sm" onclick="removerRegistro('${reg.id}')" style="margin-left:0.5rem;">🗑️</button>
           </div>
         `;
         presenceList.appendChild(li);
       });
-    }
-
-    function removerRegistro(regId) {
-  const evtAtual = eventos.find(e => e.id === eventoAtivoId);
-  if (!evtAtual) return;
-  
-  // Garantimos que a comparação funcione tanto para números quanto para textos
-  evtAtual.registros = evtAtual.registros.filter(r => String(r.id) !== String(regId));
-  
-  salvarTudo();
-  renderizarPresencas();
-  tagInput.focus();
-}
-
-    // Modal Admin Controls
-    document.getElementById('btn-open-admin').onclick = abrirLogin;
-    document.getElementById('btn-header-admin').onclick = abrirLogin;
-
-    function abrirLogin() {
-      fecharMenu();
-      document.getElementById('modal-login').classList.add('open');
-    }
-
-    document.getElementById('login-form').onsubmit = (e) => {
-      e.preventDefault();
-      const user = document.getElementById('admin-user').value;
-      const pass = document.getElementById('admin-pass').value;
-
-      if (user === 'admin' && pass === 'roni1515') {
-        fecharModal('modal-login');
-        document.getElementById('modal-admin').classList.add('open');
-        renderizarFuncionarios();
-        renderizarRelatorio();
-      } else {
-        alert('Usuário ou senha incorretos!');
-      }
-    };
-
-    function fecharModal(id) { 
-      document.getElementById(id).classList.remove('open'); 
-      setTimeout(() => tagInput.focus(), 100);
-    }
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-      
-      event.target.classList.add('active');
-      document.getElementById(tabId).classList.add('active');
-
-      if (tabId === 'tab-relatorios') renderizarRelatorio();
-    }
-
-    // CRUD Funcionários
-    document.getElementById('employee-form').onsubmit = (e) => {
-      e.preventDefault();
-      const tag = document.getElementById('emp-tag').value.trim();
-      const nome = document.getElementById('emp-name').value.trim();
-      const setor = document.getElementById('emp-sector').value.trim();
-
-      const existeIdx = funcionarios.findIndex(f => f.tag.toLowerCase() === tag.toLowerCase());
-      if (existeIdx >= 0) {
-        funcionarios[existeIdx] = { id: funcionarios[existeIdx].id || String(Date.now()), tag, nome, setor };
-      } else {
-        funcionarios.push({ id: String(Date.now()), tag, nome, setor });
-      }
-
-      salvarTudo();
-      renderizarFuncionarios();
-      document.getElementById('employee-form').reset();
-    };
-
-    function renderizarFuncionarios() {
-      const tbody = document.getElementById('employees-table');
-      tbody.innerHTML = '';
-      funcionarios.forEach((f, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${f.tag}</b></td>
-          <td>${f.nome}</td>
-          <td>${f.setor || 'Geral'}</td>
-          <td>
-            <button class="btn-sm btn-del-sm" onclick="deletarFuncionario(${idx})">Excluir</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function deletarFuncionario(idx) {
-      if (confirm('Deseja remover este funcionário?')) {
-        funcionarios.splice(idx, 1);
-        salvarTudo();
-        renderizarFuncionarios();
-      }
-    }
-
-    // Relatórios
-    function renderizarRelatorio() {
-      const tbody = document.getElementById('reports-table');
-      tbody.innerHTML = '';
-
-      funcionarios.forEach(f => {
-        let totalEventos = 0;
-        let totalAtrasos = 0;
-
-        eventos.forEach(evt => {
-          const reg = evt.registros.find(r => r.tag.toLowerCase() === f.tag.toLowerCase());
-          if (reg) {
-            totalEventos++;
-            if (reg.atrasado) totalAtrasos++;
-          }
-        });
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${f.nome}</b> (${f.tag})</td>
-          <td>${f.setor || 'Geral'}</td>
-          <td>${totalEventos} evento(s)</td>
-          <td><span style="color:${totalAtrasos > 0 ? 'red' : 'green'}; font-weight:bold;">${totalAtrasos} atraso(s)</span></td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    // =========================================================================
-    // EXPORTAÇÃO E IMPORTAÇÃO FORMATADAS NO PADRÃO SOLICITADO
-    // =========================================================================
-
-    function exportarBackup() {
-      // 1. Mapeamento de Colaboradores
-      const colaboradoresExport = funcionarios.map((f, i) => ({
-        id: f.id || String(i + 1),
-        nome: f.nome,
-        rfid: f.tag
-      }));
-
-      // 2. Mapeamento do Histórico Completo de Presenças
-      const historicoCompletoExport = [];
-      eventos.forEach(evt => {
-        evt.registros.forEach(reg => {
-          historicoCompletoExport.push({
-            id: String(reg.id),
-            rfid: reg.tag,
-            nome: reg.nome,
-            start: reg.isoStart || new Date().toISOString(),
-            end: reg.isoStart || new Date().toISOString(),
-            duracaoSegundos: reg.atrasado ? 1200 : 600,
-            limiteSegundos: 900,
-            excedido: !!reg.atrasado
-          });
-        });
-      });
-
-      // 3. Montagem da Estrutura Final
-      const backupEstrutura = {
-        colaboradores: colaboradoresExport,
-        historicoCompleto: historicoCompletoExport,
-        configLimitMinutes: 15,
-        pausasAtivas: {}
-      };
-
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupEstrutura, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `backup_dados_cafe_roni_${getFormattedDateOnly().replace(/\//g, '-')}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-
-    function importarBackup(event) {
-      const fileReader = new FileReader();
-      fileReader.onload = function(e) {
-        try {
-          const parsed = JSON.parse(e.target.result);
-
-          // Validação da base de colaboradores
-          if (parsed.colaboradores && Array.isArray(parsed.colaboradores)) {
-            funcionarios = parsed.colaboradores.map(c => ({
-              id: String(c.id),
-              tag: c.rfid,
-              nome: c.nome,
-              setor: 'Geral'
-            }));
-          }
-
-          // Validação do Histórico e reconstrução do Evento Ativo
-          if (parsed.historicoCompleto && Array.isArray(parsed.historicoCompleto)) {
-            const novosRegistros = parsed.historicoCompleto.map(h => ({
-              id: h.id,
-              tag: h.rfid,
-              nome: h.nome,
-              setor: 'Geral',
-              hora: h.start ? new Date(h.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00',
-              atrasado: !!h.excedido,
-              isoStart: h.start
-            }));
-
-            // Aplica os registros no evento ativo corrente ou cria um
-            let evtAtual = eventos.find(ev => ev.id === eventoAtivoId);
-            if (!evtAtual) {
-              evtAtual = {
-                id: 'evt_' + Date.now(),
-                nome: 'Evento Importado',
-                data: getFormattedDateOnly(),
-                horaInicio: '08:00',
-                registros: []
-              };
-              eventos.unshift(evtAtual);
-              eventoAtivoId = evtAtual.id;
-            }
-
-            evtAtual.registros = novosRegistros;
-          }
-
-          salvarTudo();
-          renderizarEventos();
-          renderizarPresencas();
-          renderizarFuncionarios();
-          alert('Backup na base padrão importado e restaurado com sucesso!');
-        } catch (err) {
-          alert('Erro ao processar o arquivo JSON de backup.');
-        }
-      };
-      fileReader.readAsText(event.target.files[0]);
     }
 
     function exibirMensagem(txt, tipo) {
