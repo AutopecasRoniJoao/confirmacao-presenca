@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Ponto — Leitor de Tags | Roni</title>
+  
+  <!-- Configurações PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0056b3">
+  <link rel="apple-touch-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
+
   <style>
     :root {
       --primary: #0056b3;
@@ -13,12 +19,7 @@
       --border: #e9ecef;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
     body {
       background-color: var(--bg);
@@ -40,10 +41,7 @@
 
     header img { max-height: 70px; }
 
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
+    .header-actions { display: flex; gap: 0.5rem; }
 
     .btn-header {
       background-color: transparent;
@@ -57,15 +55,8 @@
       transition: all 0.2s;
     }
 
-    .btn-header:hover {
-      background-color: var(--primary);
-      color: white;
-    }
-
-    .btn-admin {
-      background-color: var(--primary);
-      color: white;
-    }
+    .btn-header:hover { background-color: var(--primary); color: white; }
+    .btn-admin { background-color: var(--primary); color: white; }
 
     main {
       flex: 1;
@@ -185,7 +176,6 @@
     .status-badge.atrasado { background-color: #fef3c7; color: #b45309; }
     .status-badge.notempo { background-color: #d1fae5; color: #047857; }
 
-    /* Modal de Login */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -213,12 +203,7 @@
       font-size: 1.2rem; cursor: pointer; color: #666;
     }
 
-    footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.85rem;
-      color: #6c757d;
-    }
+    footer { text-align: center; padding: 1rem; font-size: 0.85rem; color: #6c757d; }
   </style>
 </head>
 <body>
@@ -267,7 +252,6 @@
     </div>
   </main>
 
-  <!-- Modal de Login para Admin -->
   <div class="modal-overlay" id="modal-login">
     <div class="modal-card">
       <button class="modal-close" onclick="fecharModalAdmin()">&times;</button>
@@ -294,21 +278,18 @@
     const statusMsg = document.getElementById('status-msg');
     const tagInput = document.getElementById('tag-input');
 
-    // Contexto de Áudio Nativo
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Função para gerar os Bips
     function tocarSom(tipo) {
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
 
       if (tipo === 'sucesso') {
-        // Bip agudo e limpo (180ms)
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime); // Nota C6
+        osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.18);
         osc.connect(gain);
@@ -316,7 +297,6 @@
         osc.start();
         osc.stop(audioCtx.currentTime + 0.18);
       } else {
-        // Bip grave duplo (alerta / erro / atraso)
         const playBeep = (delay) => {
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
@@ -408,7 +388,7 @@
 
       const jaRegistrado = evtAtual.registros.find(r => r.tag.toLowerCase() === tag.toLowerCase());
       if (jaRegistrado) {
-        tocarSom('alerta'); // 🔊 Som de Alerta (Já registrado)
+        tocarSom('alerta');
         exibirMensagem(`⚠️ ATENÇÃO: Presença de "${jaRegistrado.nome}" já registrada neste evento!`, 'alerta');
         tagInput.value = '';
         tagInput.focus();
@@ -440,10 +420,10 @@
       renderizarPresencas();
 
       if (atrasado) {
-        tocarSom('alerta'); // 🔊 Som de Atraso
+        tocarSom('alerta');
         exibirMensagem(`✓ Presença confirmada: ${nomeExibicao} (Atrasado)`, 'erro');
       } else {
-        tocarSom('sucesso'); // 🔊 Som de Sucesso
+        tocarSom('sucesso');
         exibirMensagem(`✓ Presença confirmada: ${nomeExibicao}`, 'sucesso');
       }
 
@@ -496,7 +476,6 @@
       }
     }
 
-    // Modal Admin Login
     function abrirModalAdmin() {
       document.getElementById('modal-login').style.display = 'flex';
       document.getElementById('modal-user').focus();
@@ -518,6 +497,15 @@
         alert('Usuário ou senha incorretos!');
       }
     };
+
+    // Registro do Service Worker (PWA)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado com sucesso!'))
+          .catch(err => console.log('Falha ao registrar Service Worker:', err));
+      });
+    }
   </script>
 </body>
 </html>
