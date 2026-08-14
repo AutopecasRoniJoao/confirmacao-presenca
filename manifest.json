@@ -1,1 +1,20 @@
-
+{
+  "name": "Sistema de Ponto Roni",
+  "short_name": "Ponto Roni",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0056b3",
+  "theme_color": "#0056b3",
+  "icons": [
+    {
+      "src": "https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
