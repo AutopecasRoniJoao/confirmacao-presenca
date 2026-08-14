@@ -39,6 +39,32 @@
       min-height: 100vh;
     }
 
+    /* 🔐 TELA DE LOGIN (BLOQUEIO) */
+    .login-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-color: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+
+    .login-card img { max-height: 60px; margin-bottom: 1rem; }
+    .login-card h2 { font-size: 1.25rem; color: var(--primary); margin-bottom: 0.5rem; }
+    .login-card p { font-size: 0.85rem; color: #64748b; margin-bottom: 1.2rem; }
+
     header {
       background-color: var(--card-bg);
       padding: 1rem 1.5rem;
@@ -52,6 +78,8 @@
 
     header img { max-height: 50px; width: auto; }
 
+    .header-btns { display: flex; gap: 0.5rem; }
+
     .btn-voltar {
       background-color: transparent;
       color: var(--primary);
@@ -64,6 +92,16 @@
     }
 
     .btn-voltar:hover { background-color: var(--primary); color: white; }
+
+    .btn-sair {
+      background-color: #e2e8f0;
+      color: #334155;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
     main {
       flex: 1;
@@ -123,7 +161,7 @@
     }
 
     label { display: block; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; }
-    select, input[type="text"], input[type="time"] {
+    select, input[type="text"], input[type="password"], input[type="time"] {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid var(--border);
@@ -259,9 +297,31 @@
 </head>
 <body>
 
+  <!-- 🔒 TELA DE SENHA E AUTENTICAÇÃO -->
+  <div class="login-overlay" id="login-overlay">
+    <div class="login-card">
+      <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
+      <h2>Acesso Administrativo</h2>
+      <p>Digite a senha para acessar o painel de gestão.</p>
+      
+      <form onsubmit="autenticarAdmin(event)">
+        <input type="password" id="admin-pass" placeholder="Senha do administrador" required autofocus />
+        <p id="login-error" style="color: var(--danger); font-size: 0.8rem; margin-bottom: 0.5rem; display: none;">Senha incorreta. Tente novamente.</p>
+        <button type="submit" class="btn-primary" style="width: 100%;">Entrar no Painel</button>
+      </form>
+      
+      <div style="margin-top: 1rem;">
+        <a href="index.html" style="color: #64748b; font-size: 0.85rem; text-decoration: none;">← Voltar para Chamada</a>
+      </div>
+    </div>
+  </div>
+
   <header>
     <img src="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg" alt="Logo Roni">
-    <a href="index.html" class="btn-voltar">← Voltar para Chamada</a>
+    <div class="header-btns">
+      <a href="index.html" class="btn-voltar">← Voltar para Chamada</a>
+      <button class="btn-sair" onclick="logoutAdmin()">🔒 Sair</button>
+    </div>
   </header>
 
   <main>
@@ -339,6 +399,9 @@
   <footer>&copy; Painel Administrativo — Roni</footer>
 
   <script>
+    // 🔑 CONFIGURE A SUA SENHA AQUI
+    const SENHA_ADMIN = '1234';
+
     let eventos = [];
     let funcionarios = [];
     let idEdicaoAtual = null;
@@ -346,9 +409,42 @@
     init();
 
     function init() {
+      verificarAutenticacao();
       carregarDados();
       renderizarSelectsEventos();
       carregarColaboradores();
+    }
+
+    // 🔐 LÓGICA DE AUTENTICAÇÃO POR SENHA
+    function verificarAutenticacao() {
+      const autenticado = sessionStorage.getItem('admin_autenticado');
+      if (autenticado === 'true') {
+        document.getElementById('login-overlay').style.display = 'none';
+      } else {
+        document.getElementById('login-overlay').style.display = 'flex';
+      }
+    }
+
+    function autenticarAdmin(e) {
+      e.preventDefault();
+      const pass = document.getElementById('admin-pass').value;
+      const errorMsg = document.getElementById('login-error');
+
+      if (pass === SENHA_ADMIN) {
+        sessionStorage.setItem('admin_autenticado', 'true');
+        document.getElementById('login-overlay').style.display = 'none';
+        errorMsg.style.display = 'none';
+        document.getElementById('admin-pass').value = '';
+      } else {
+        errorMsg.style.display = 'block';
+        document.getElementById('admin-pass').value = '';
+        document.getElementById('admin-pass').focus();
+      }
+    }
+
+    function logoutAdmin() {
+      sessionStorage.removeItem('admin_autenticado');
+      verificarAutenticacao();
     }
 
     function carregarDados() {
@@ -508,7 +604,7 @@
       lista.innerHTML = '';
 
       if (funcionarios.length === 0) {
-        lista.innerHTML = '<li style="text-align: center; color: #64748b; padding: 1rem;">Nenhum colaborador cadastrado.</li>';
+        lista.innerHTML = '<li style="text-align: center; color: #64748b; padding: 1rem;">Nenum colaborador cadastrado.</li>';
         return;
       }
 
