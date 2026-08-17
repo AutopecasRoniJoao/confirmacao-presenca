@@ -1,20 +1,20 @@
 {
-  "name": "Sistema de Ponto Roni",
-  "short_name": "Ponto Roni",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0056b3",
-  "theme_color": "#0056b3",
+  "short_name": "Presença",
+  "name": "Sistema de Confirmação de Presença",
   "icons": [
     {
-      "src": "https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg",
-      "sizes": "192x192",
-      "type": "image/jpeg"
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
     },
     {
-      "src": "https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg"
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
-  ]
+  ],
+  "start_url": "./index.html",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "display": "standalone"
 }
