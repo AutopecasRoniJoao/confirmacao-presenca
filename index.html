@@ -36,11 +36,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
     }
 
-    header img { max-height: 50px; width: auto; }
+    header img { max-height: 45px; width: auto; }
 
     .btn-admin {
       background-color: transparent;
@@ -50,14 +48,17 @@
       font-weight: 600;
       border-radius: 8px;
       text-decoration: none;
+      transition: all 0.2s;
     }
+
+    .btn-admin:hover { background-color: var(--primary); color: white; }
 
     main {
       flex: 1;
-      max-width: 800px;
+      max-width: 600px;
       margin: 0 auto;
       width: 100%;
-      padding: 1.5rem 1rem;
+      padding: 2rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -65,7 +66,7 @@
 
     .card {
       background-color: var(--card-bg);
-      padding: 1.5rem;
+      padding: 1.8rem;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
@@ -79,21 +80,24 @@
     }
 
     label { display: block; font-weight: 600; margin-bottom: 0.4rem; font-size: 0.9rem; }
+    
     select, input[type="text"] {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.85rem;
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.2rem;
       outline: none;
     }
+
+    select:focus, input:focus { border-color: var(--primary); }
 
     .btn-primary {
       background-color: var(--primary);
       color: white;
       border: none;
-      padding: 0.75rem 1.2rem;
+      padding: 0.85rem;
       font-weight: 700;
       border-radius: 8px;
       cursor: pointer;
@@ -101,30 +105,14 @@
       font-size: 1rem;
     }
 
-    .backup-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .btn-secondary {
-      background-color: #64748b;
-      color: white;
-      border: none;
-      padding: 0.6rem 1rem;
-      font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      flex: 1;
-      font-size: 0.85rem;
-    }
+    .btn-primary:hover { background-color: var(--primary-hover); }
 
     .list-presencas {
       list-style: none;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      max-height: 300px;
+      max-height: 250px;
       overflow-y: auto;
     }
 
@@ -147,6 +135,8 @@
 
     .status-badge.notempo { background: #d1fae5; color: #047857; }
     .status-badge.atrasado { background: #fef3c7; color: #b45309; }
+
+    footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -157,34 +147,28 @@
   </header>
 
   <main>
-    <!-- TELA DE CHAMADA DA PRESENÇA -->
     <div class="card">
-      <h2>📌 Registrar Presença</h2>
+      <h2>📌 Registro de Presença</h2>
 
-      <label for="select-evento">Selecione o Evento Ativo:</label>
+      <label for="select-evento">Evento Ativo:</label>
       <select id="select-evento" onchange="atualizarListaRecentes()"></select>
 
-      <form onsubmit="registrarPresencaManual(event)">
-        <label for="tag-rfid">Tag RFID / Digitar Código:</label>
-        <input type="text" id="tag-rfid" placeholder="Aproxime o cartão ou digite o código..." autofocus required />
+      <form onsubmit="registrarPresenca(event)">
+        <label for="tag-rfid">Aproxime a Tag ou Digite o Código:</label>
+        <input type="text" id="tag-rfid" placeholder="Aguardando leitura..." autofocus required autocomplete="off" />
         <button type="submit" class="btn-primary">Confirmar Presença</button>
       </form>
     </div>
 
-    <!-- LISTA DE PRESENÇAS REGISTRADAS -->
     <div class="card">
-      <h2>📋 Útimas Presenças Registradas</h2>
+      <h2>📋 Útimas Presenças</h2>
       <ul id="lista-recentes" class="list-presencas">
         <li style="text-align: center; color: #64748b; padding: 1rem;">Nenhum registro no evento selecionado.</li>
       </ul>
-
-      <div class="backup-actions">
-        <button class="btn-secondary" onclick="exportarBackupJSON()">📥 Exportar Backup</button>
-        <button class="btn-secondary" onclick="document.getElementById('input-file-backup').click()">📤 Importar Backup</button>
-        <input type="file" id="input-file-backup" accept=".json" style="display:none;" onchange="importarBackupJSON(event)">
-      </div>
     </div>
   </main>
+
+  <footer>&copy; Sistema de Presença — Roni</footer>
 
   <script>
     let eventos = [];
@@ -228,7 +212,7 @@
       atualizarListaRecentes();
     }
 
-    function registrarPresencaManual(e) {
+    function registrarPresenca(e) {
       e.preventDefault();
       const evtId = document.getElementById('select-evento').value;
       const tagInput = document.getElementById('tag-rfid');
@@ -241,7 +225,7 @@
 
       const func = funcionarios.find(f => f.tag === tagValor);
       if (!func) {
-        alert('❌ Tag ou colaborador não cadastrado no sistema!');
+        alert('❌ Tag ou colaborador não cadastrado!');
         tagInput.value = '';
         return;
       }
@@ -299,42 +283,6 @@
         `;
         lista.appendChild(li);
       });
-    }
-
-    function exportarBackupJSON() {
-      const dados = {
-        eventos: JSON.parse(localStorage.getItem('eventos_roni')) || [],
-        funcionarios: JSON.parse(localStorage.getItem('funcionarios_roni')) || []
-      };
-
-      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `backup_roni_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-    }
-
-    function importarBackupJSON(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          const dados = JSON.parse(evt.target.result);
-          if (dados.eventos && dados.funcionarios) {
-            localStorage.setItem('eventos_roni', JSON.stringify(dados.eventos));
-            localStorage.setItem('funcionarios_roni', JSON.stringify(dados.funcionarios));
-            alert('✓ Backup restaurado com sucesso!');
-            location.reload();
-          } else {
-            alert('Formato do arquivo de backup inválido.');
-          }
-        } catch (err) {
-          alert('Erro ao ler o arquivo de backup.');
-        }
-      };
-      reader.readAsText(file);
     }
   </script>
 </body>
