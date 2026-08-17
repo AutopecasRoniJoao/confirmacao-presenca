@@ -433,24 +433,25 @@ const HASH_SENHA_ADMIN = '2a55bbcd0bf30ef957ec394b9aa102be8975a50785ed72d3fec6c1
       }
     }
 
-    async function autenticarAdmin(e) {
-      e.preventDefault();
-      const pass = document.getElementById('admin-pass').value;
-      const errorMsg = document.getElementById('login-error');
+   async function autenticarAdmin(e) {
+  e.preventDefault();
+  // trim() remove espaços acidentais no início ou final
+  const pass = document.getElementById('admin-pass').value.trim();
+  const errorMsg = document.getElementById('login-error');
 
-      const hashInput = await gerarHashSHA256(pass);
+  const hashInput = await gerarHashSHA256(pass);
 
-      if (hashInput === HASH_SENHA_ADMIN) {
-        sessionStorage.setItem('admin_autenticado', 'true');
-        document.getElementById('login-overlay').style.display = 'none';
-        errorMsg.style.display = 'none';
-        document.getElementById('admin-pass').value = '';
-      } else {
-        errorMsg.style.display = 'block';
-        document.getElementById('admin-pass').value = '';
-        document.getElementById('admin-pass').focus();
-      }
-    }
+  if (hashInput === HASH_SENHA_ADMIN) {
+    sessionStorage.setItem('admin_autenticado', 'true');
+    document.getElementById('login-overlay').style.display = 'none';
+    errorMsg.style.display = 'none';
+    document.getElementById('admin-pass').value = '';
+  } else {
+    errorMsg.style.display = 'block';
+    document.getElementById('admin-pass').value = '';
+    document.getElementById('admin-pass').focus();
+  }
+}
 
     function logoutAdmin() {
       sessionStorage.removeItem('admin_autenticado');
