@@ -224,9 +224,18 @@
       renderizarFuncionarios();
       
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Erro:', err));
-      }
-    });
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    reg.onupdatefound = () => {
+      const installingWorker = reg.installing;
+      installingWorker.onstatechange = () => {
+        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          // Atualiza a página automaticamente quando houver mudança no código
+          window.location.reload();
+        }
+      };
+    };
+  });
+}
 
     function carregarDados() {
       eventos = JSON.parse(localStorage.getItem('eventos_roni')) || [];
