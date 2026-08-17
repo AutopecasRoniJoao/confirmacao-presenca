@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin | Roni</title>
+  
+  <link rel="icon" type="image/x-icon" href="https://roni.com.br/wp-content/uploads/2023/02/Logomarca-RONI-oficial.jpg">
+
+  <style>
+    :root {
+      --primary: #0056b3;
+      --bg: #f4f6f9;
+      --card-bg: #ffffff;
+      --text: #212529;
+      --border: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+    body { background-color: var(--bg); color: var(--text); padding: 2rem 1rem; }
+
+    .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .header-admin {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .btn-back {
+      background: #64748b;
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .card h2 { color: var(--primary); font-size: 1.2rem; margin-bottom: 1rem; }
+
+    .backup-group { display: flex; gap: 10px; margin-top: 10px; }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.secondary { background: #475569; }
+    button:hover { opacity: 0.9; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-admin">
+      <h2>⚙️ Painel Administrativo</h2>
+      <a href="index.html" class="btn-back">⬅️ Voltar à Chamada</a>
+    </div>
+
+    <!-- Seção de Backup de Dados -->
+    <div class="card">
+      <h2>📥 Cópias de Segurança (Backup)</h2>
+      <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1rem;">
+        Exporte o histórico de eventos e cadastros para salvar em seu computador ou importar em outro dispositivo.
+      </p>
+      
+      <div class="backup-group">
+        <button onclick="exportarBackupJSON()">📥 Exportar Backup (JSON)</button>
+        <button class="secondary" onclick="document.getElementById('input-backup').click()">📤 Importar Backup (JSON)</button>
+        <input type="file" id="input-backup" accept=".json" style="display:none;" onchange="importarBackupJSON(event)">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function exportarBackupJSON() {
+      const dados = {
+        eventos: JSON.parse(localStorage.getItem('eventos_roni')) || [],
+        funcionarios: JSON.parse(localStorage.getItem('funcionarios_roni')) || []
+      };
+
+      const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `backup_roni_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+    }
+
+    function importarBackupJSON(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const dados = JSON.parse(evt.target.result);
+          if (dados.eventos && dados.funcionarios) {
+            localStorage.setItem('eventos_roni', JSON.stringify(dados.eventos));
+            localStorage.setItem('funcionarios_roni', JSON.stringify(dados.funcionarios));
+            alert('✓ Backup restaurado com sucesso!');
+            location.reload();
+          } else {
+            alert('Formato do arquivo de backup inválido.');
+          }
+        } catch (err) {
+          alert('Erro ao ler o arquivo de backup.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
