@@ -399,8 +399,8 @@
   <footer>&copy; Painel Administrativo — Roni</footer>
 
   <script>
-    // 🔑 CONFIGURE A SUA SENHA AQUI
-    const SENHA_ADMIN = '1234';
+    // 🔑 Hash SHA-256 da senha "4pronixv"
+    const HASH_SENHA_ADMIN = '11b0bbcfcc34ef85ea0e0f31c818816c7fb773ca287135e884ec2ddc6ff8c5f0';
 
     let eventos = [];
     let funcionarios = [];
@@ -415,7 +415,15 @@
       carregarColaboradores();
     }
 
-    // 🔐 LÓGICA DE AUTENTICAÇÃO POR SENHA
+    // 🔐 GERAÇÃO DE HASH SHA-256 NATIVO DO NAVEGADOR
+    async function gerarHashSHA256(texto) {
+      const msgUint8 = new TextEncoder().encode(texto);
+      const bufferHash = await crypto.subtle.digest('SHA-256', msgUint8);
+      const arrayHash = Array.from(new Uint8Array(bufferHash));
+      return arrayHash.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // 🔐 LÓGICA DE AUTENTICAÇÃO
     function verificarAutenticacao() {
       const autenticado = sessionStorage.getItem('admin_autenticado');
       if (autenticado === 'true') {
@@ -425,12 +433,14 @@
       }
     }
 
-    function autenticarAdmin(e) {
+    async function autenticarAdmin(e) {
       e.preventDefault();
       const pass = document.getElementById('admin-pass').value;
       const errorMsg = document.getElementById('login-error');
 
-      if (pass === SENHA_ADMIN) {
+      const hashInput = await gerarHashSHA256(pass);
+
+      if (hashInput === HASH_SENHA_ADMIN) {
         sessionStorage.setItem('admin_autenticado', 'true');
         document.getElementById('login-overlay').style.display = 'none';
         errorMsg.style.display = 'none';
@@ -604,7 +614,7 @@
       lista.innerHTML = '';
 
       if (funcionarios.length === 0) {
-        lista.innerHTML = '<li style="text-align: center; color: #64748b; padding: 1rem;">Nenum colaborador cadastrado.</li>';
+        lista.innerHTML = '<li style="text-align: center; color: #64748b; padding: 1rem;">Nenhum colaborador cadastrado.</li>';
         return;
       }
 
