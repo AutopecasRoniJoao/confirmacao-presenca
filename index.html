@@ -55,10 +55,10 @@
 
     main {
       flex: 1;
-      max-width: 600px;
+      max-width: 650px;
       margin: 0 auto;
       width: 100%;
-      padding: 2rem 1rem;
+      padding: 1.5rem 1rem;
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
@@ -66,13 +66,13 @@
 
     .card {
       background-color: var(--card-bg);
-      padding: 1.8rem;
+      padding: 1.5rem;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     }
 
     .card h2 {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       margin-bottom: 1rem;
       color: var(--primary);
       border-bottom: 2px solid #f1f5f9;
@@ -83,15 +83,42 @@
     
     select, input[type="text"] {
       width: 100%;
-      padding: 0.85rem;
+      padding: 0.75rem;
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 1rem;
-      margin-bottom: 1.2rem;
+      margin-bottom: 1rem;
       outline: none;
     }
 
     select:focus, input:focus { border-color: var(--primary); }
+
+    /* Alternador de Modo de Chamada */
+    .modo-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      background: #e2e8f0;
+      padding: 4px;
+      border-radius: 8px;
+    }
+
+    .btn-tab {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      color: #475569;
+    }
+
+    .btn-tab.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
 
     .btn-primary {
       background-color: var(--primary);
@@ -148,20 +175,36 @@
 
   <main>
     <div class="card">
-      <h2>📌 Registro de Presença</h2>
+      <h2>📌 Registrar Presença</h2>
 
-      <label for="select-evento">Evento Ativo:</label>
+      <label for="select-evento">Selecione o Evento Ativo:</label>
       <select id="select-evento" onchange="atualizarListaRecentes()"></select>
 
-      <form onsubmit="registrarPresenca(event)">
-        <label for="tag-rfid">Aproxime a Tag ou Digite o Código:</label>
-        <input type="text" id="tag-rfid" placeholder="Aguardando leitura..." autofocus required autocomplete="off" />
-        <button type="submit" class="btn-primary">Confirmar Presença</button>
+      <!-- Abas para alternar o modo de registro -->
+      <div class="modo-selector">
+        <button type="button" class="btn-tab active" id="tab-tag" onclick="mudarModo('tag')">Leitura por Tag RFID</button>
+        <button type="button" class="btn-tab" id="tab-nome" onclick="mudarModo('nome')">Buscar por Nome</button>
+      </div>
+
+      <!-- Formulário MODO TAG RFID -->
+      <form id="form-tag" onsubmit="registrarPorTag(event)">
+        <label for="input-tag">Aproxime o cartão / leitor Tag:</label>
+        <input type="text" id="input-tag" placeholder="Aguardando leitura do código..." autofocus autocomplete="off" required />
+        <button type="submit" class="btn-primary">Confirmar por Tag</button>
+      </form>
+
+      <!-- Formulário MODO NOME -->
+      <form id="form-nome" onsubmit="registrarPorNome(event)" style="display: none;">
+        <label for="select-funcionario">Selecione o Colaborador:</label>
+        <select id="select-funcionario" required>
+          <option value="">Carregando funcionários...</option>
+        </select>
+        <button type="submit" class="btn-primary">Confirmar Presença Manual</button>
       </form>
     </div>
 
     <div class="card">
-      <h2>📋 Útimas Presenças</h2>
+      <h2>📋 Últimas Presenças Registradas</h2>
       <ul id="lista-recentes" class="list-presencas">
         <li style="text-align: center; color: #64748b; padding: 1rem;">Nenhum registro no evento selecionado.</li>
       </ul>
@@ -173,10 +216,12 @@
   <script>
     let eventos = [];
     let funcionarios = [];
+    let modoAtual = 'tag';
 
     document.addEventListener('DOMContentLoaded', () => {
       carregarDados();
       renderizarEventos();
+      renderizarFuncionarios();
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Erro:', err));
@@ -193,12 +238,33 @@
       localStorage.setItem('funcionarios_roni', JSON.stringify(funcionarios));
     }
 
+    function mudarModo(modo) {
+      modoAtual = modo;
+      const tabTag = document.getElementById('tab-tag');
+      const tabNome = document.getElementById('tab-nome');
+      const formTag = document.getElementById('form-tag');
+      const formNome = document.getElementById('form-nome');
+
+      if (modo === 'tag') {
+        tabTag.classList.add('active');
+        tabNome.classList.remove('active');
+        formTag.style.display = 'block';
+        formNome.style.display = 'none';
+        document.getElementById('input-tag').focus();
+      } else {
+        tabNome.classList.add('active');
+        tabTag.classList.remove('active');
+        formNome.style.display = 'block';
+        formTag.style.display = 'none';
+      }
+    }
+
     function renderizarEventos() {
       const select = document.getElementById('select-evento');
       select.innerHTML = '';
 
       if (eventos.length === 0) {
-        select.innerHTML = '<option value="">Nenhum evento ativo cadastrado</option>';
+        select.innerHTML = '<option value="">Nenhum evento cadastrado</option>';
         return;
       }
 
@@ -212,31 +278,40 @@
       atualizarListaRecentes();
     }
 
-    function registrarPresenca(e) {
-      e.preventDefault();
-      const evtId = document.getElementById('select-evento').value;
-      const tagInput = document.getElementById('tag-rfid');
-      const tagValor = tagInput.value.trim();
+    function renderizarFuncionarios() {
+      const select = document.getElementById('select-funcionario');
+      select.innerHTML = '<option value="">Escolha um funcionário...</option>';
 
-      if (!evtId) {
-        alert('Selecione ou crie um evento no painel admin primeiro!');
+      if (funcionarios.length === 0) {
+        select.innerHTML = '<option value="">Nenhum colaborador cadastrado</option>';
         return;
       }
 
-      const func = funcionarios.find(f => f.tag === tagValor);
-      if (!func) {
-        alert('❌ Tag ou colaborador não cadastrado!');
-        tagInput.value = '';
-        return;
+      // Ordenar nomes de A-Z
+      const listaOrdenada = [...funcionarios].sort((a, b) => a.nome.localeCompare(b.nome));
+
+      listaOrdenada.forEach(func => {
+        const opt = document.createElement('option');
+        opt.value = func.id || func.tag;
+        opt.textContent = `${func.nome} (${func.setor || 'Sem Setor'})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function registrarPresencaGeral(func) {
+      const evtId = document.getElementById('select-evento').value;
+      if (!evtId) {
+        alert('Selecione ou crie um evento no painel admin primeiro!');
+        return false;
       }
 
       const evt = eventos.find(e => e.id === evtId);
       if (!evt.registros) evt.registros = [];
 
-      if (evt.registros.some(r => r.tag === tagValor)) {
+      // Verifica duplicidade
+      if (evt.registros.some(r => r.tag === func.tag || r.nome === func.nome)) {
         alert(`⚠️ ${func.nome} já registrou presença neste evento!`);
-        tagInput.value = '';
-        return;
+        return false;
       }
 
       const agora = new Date();
@@ -253,9 +328,39 @@
       });
 
       salvarTudo();
-      tagInput.value = '';
       atualizarListaRecentes();
       alert(`✓ Presença confirmada: ${func.nome}`);
+      return true;
+    }
+
+    function registrarPorTag(e) {
+      e.preventDefault();
+      const tagInput = document.getElementById('input-tag');
+      const tagValor = tagInput.value.trim();
+
+      const func = funcionarios.find(f => f.tag === tagValor);
+      if (!func) {
+        alert('❌ Tag ou colaborador não cadastrado!');
+        tagInput.value = '';
+        return;
+      }
+
+      if (registrarPresencaGeral(func)) {
+        tagInput.value = '';
+      }
+    }
+
+    function registrarPorNome(e) {
+      e.preventDefault();
+      const selectVal = document.getElementById('select-funcionario').value;
+
+      const func = funcionarios.find(f => f.id === selectVal || f.tag === selectVal);
+      if (!func) {
+        alert('Selecione um funcionário válido!');
+        return;
+      }
+
+      registrarPresencaGeral(func);
     }
 
     function atualizarListaRecentes() {
@@ -275,7 +380,7 @@
         li.innerHTML = `
           <div>
             <strong>${reg.nome}</strong> <br>
-            <small style="color: #64748b;">${reg.setor} | ⏰ ${reg.hora}</small>
+            <small style="color: #64748b;">${reg.setor || 'Geral'} | ⏰ ${reg.hora}</small>
           </div>
           <span class="status-badge ${reg.atrasado ? 'atrasado' : 'notempo'}">
             ${reg.atrasado ? 'Atrasado' : 'No Tempo'}
