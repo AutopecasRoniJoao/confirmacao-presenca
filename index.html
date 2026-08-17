@@ -17,8 +17,6 @@
       --card-bg: #ffffff;
       --text: #212529;
       --border: #cbd5e1;
-      --success: #28a745;
-      --danger: #dc3545;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -52,10 +50,7 @@
       font-weight: 600;
       border-radius: 8px;
       text-decoration: none;
-      transition: all 0.2s;
     }
-
-    .btn-admin:hover { background-color: var(--primary); color: white; }
 
     main {
       flex: 1;
@@ -94,8 +89,6 @@
       outline: none;
     }
 
-    select:focus, input:focus { border-color: var(--primary); }
-
     .btn-primary {
       background-color: var(--primary);
       color: white;
@@ -107,8 +100,6 @@
       width: 100%;
       font-size: 1rem;
     }
-
-    .btn-primary:hover { background-color: var(--primary-hover); }
 
     .backup-actions {
       display: flex;
@@ -156,8 +147,6 @@
 
     .status-badge.notempo { background: #d1fae5; color: #047857; }
     .status-badge.atrasado { background: #fef3c7; color: #b45309; }
-
-    footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -168,7 +157,7 @@
   </header>
 
   <main>
-    <!-- Card de Registro de Presença -->
+    <!-- TELA DE CHAMADA DA PRESENÇA -->
     <div class="card">
       <h2>📌 Registrar Presença</h2>
 
@@ -182,7 +171,7 @@
       </form>
     </div>
 
-    <!-- Lista de Presenças Recentes -->
+    <!-- LISTA DE PRESENÇAS REGISTRADAS -->
     <div class="card">
       <h2>📋 Útimas Presenças Registradas</h2>
       <ul id="lista-recentes" class="list-presencas">
@@ -197,8 +186,6 @@
     </div>
   </main>
 
-  <footer>&copy; Sistema de Presença — Roni</footer>
-
   <script>
     let eventos = [];
     let funcionarios = [];
@@ -207,7 +194,6 @@
       carregarDados();
       renderizarEventos();
       
-      // Registro do Service Worker (PWA)
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Erro:', err));
       }
@@ -263,7 +249,6 @@
       const evt = eventos.find(e => e.id === evtId);
       if (!evt.registros) evt.registros = [];
 
-      // Verifica duplicidade no mesmo evento
       if (evt.registros.some(r => r.tag === tagValor)) {
         alert(`⚠️ ${func.nome} já registrou presença neste evento!`);
         tagInput.value = '';
@@ -316,7 +301,6 @@
       });
     }
 
-    // 📥 Backup em JSON
     function exportarBackupJSON() {
       const dados = {
         eventos: JSON.parse(localStorage.getItem('eventos_roni')) || [],
@@ -330,7 +314,6 @@
       a.click();
     }
 
-    // 📤 Importação de Backup
     function importarBackupJSON(e) {
       const file = e.target.files[0];
       if (!file) return;
